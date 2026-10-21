@@ -1,0 +1,1 @@
+ALTER TABLE "wiki_sources" ADD COLUMN "secrets_removed" integer DEFAULT 0 NOT NULL;

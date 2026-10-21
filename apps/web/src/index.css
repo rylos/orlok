@@ -1,0 +1,574 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Color tokens per theme (R-UI-4). Components use only these, never hard-coded colors. */
+
+:root,
+[data-theme="latte"] {
+  color-scheme: light;
+  --background: #eff1f5;
+  --foreground: #4c4f69;
+  --card: #e6e9ef;
+  --card-foreground: #4c4f69;
+  --popover: #eff1f5;
+  --popover-foreground: #4c4f69;
+  --primary: #8839ef;
+  --primary-foreground: #eff1f5;
+  --secondary: #ccd0da;
+  --secondary-foreground: #4c4f69;
+  --muted: #dce0e8;
+  --muted-foreground: #5c5f77;
+  --accent: #ccd0da;
+  --accent-foreground: #4c4f69;
+  --destructive: #d20f39;
+  --destructive-foreground: #eff1f5;
+  --success: #40a02b;
+  --warning: #df8e1d;
+  --info: #1e66f5;
+  --border: #bcc0cc;
+  --input: #bcc0cc;
+  --ring: #8839ef;
+  --sidebar: #e6e9ef;
+}
+
+[data-theme="mocha"] {
+  color-scheme: dark;
+  --background: #1e1e2e;
+  --foreground: #cdd6f4;
+  --card: #181825;
+  --card-foreground: #cdd6f4;
+  --popover: #181825;
+  --popover-foreground: #cdd6f4;
+  --primary: #cba6f7;
+  --primary-foreground: #11111b;
+  --secondary: #313244;
+  --secondary-foreground: #cdd6f4;
+  --muted: #313244;
+  --muted-foreground: #a6adc8;
+  --accent: #45475a;
+  --accent-foreground: #cdd6f4;
+  --destructive: #f38ba8;
+  --destructive-foreground: #11111b;
+  --success: #a6e3a1;
+  --warning: #f9e2af;
+  --info: #89b4fa;
+  --border: #45475a;
+  --input: #45475a;
+  --ring: #cba6f7;
+  --sidebar: #181825;
+}
+
+[data-theme="tokyo-night"] {
+  color-scheme: dark;
+  --background: #1a1b26;
+  --foreground: #c0caf5;
+  --card: #16161e;
+  --card-foreground: #c0caf5;
+  --popover: #16161e;
+  --popover-foreground: #c0caf5;
+  --primary: #7aa2f7;
+  --primary-foreground: #16161e;
+  --secondary: #292e42;
+  --secondary-foreground: #c0caf5;
+  --muted: #292e42;
+  --muted-foreground: #a9b1d6;
+  --accent: #3b4261;
+  --accent-foreground: #c0caf5;
+  --destructive: #f7768e;
+  --destructive-foreground: #16161e;
+  --success: #9ece6a;
+  --warning: #e0af68;
+  --info: #0db9d7;
+  --border: #3b4261;
+  --input: #3b4261;
+  --ring: #7aa2f7;
+  --sidebar: #16161e;
+}
+
+[data-theme="tokyo-night-light"] {
+  color-scheme: light;
+  --background: #e6e7ed;
+  --foreground: #343b59;
+  --card: #e1e2e8;
+  --card-foreground: #343b59;
+  --popover: #e1e2e8;
+  --popover-foreground: #343b59;
+  --primary: #2959aa;
+  --primary-foreground: #ffffff;
+  --secondary: #d6d8df;
+  --secondary-foreground: #343b59;
+  --muted: #d6d8df;
+  --muted-foreground: #565a6e;
+  --accent: #d0d2da;
+  --accent-foreground: #343b59;
+  --destructive: #bd4040;
+  --destructive-foreground: #ffffff;
+  --success: #587539;
+  --warning: #8f5e15;
+  --info: #2959aa;
+  --border: #b4b5b9;
+  --input: #b4b5b9;
+  --ring: #2959aa;
+  --sidebar: #e1e2e8;
+}
+
+[data-theme="rose-pine"] {
+  color-scheme: light;
+  --background: #faf4ed;
+  --foreground: #575279;
+  --card: #ede7e1;
+  --card-foreground: #575279;
+  --popover: #ede7e1;
+  --popover-foreground: #575279;
+  --primary: #907aa9;
+  --primary-foreground: #faf4ed;
+  --secondary: #f2e9e1;
+  --secondary-foreground: #575279;
+  --muted: #f2e9e1;
+  --muted-foreground: #6e6a86;
+  --accent: #dfdad9;
+  --accent-foreground: #575279;
+  --destructive: #b4637a;
+  --destructive-foreground: #faf4ed;
+  --success: #6d8f89;
+  --warning: #ea9d34;
+  --info: #56949f;
+  --border: #cecacd;
+  --input: #cecacd;
+  --ring: #907aa9;
+  --sidebar: #ede7e1;
+}
+
+[data-theme="nord"] {
+  color-scheme: dark;
+  --background: #2e3440;
+  --foreground: #d8dee9;
+  --card: #222730;
+  --card-foreground: #d8dee9;
+  --popover: #222730;
+  --popover-foreground: #d8dee9;
+  --primary: #b48ead;
+  --primary-foreground: #191c23;
+  --secondary: #3b4252;
+  --secondary-foreground: #d8dee9;
+  --muted: #3b4252;
+  --muted-foreground: #adb5c4;
+  --accent: #434c5e;
+  --accent-foreground: #d8dee9;
+  --destructive: #bf616a;
+  --destructive-foreground: #222730;
+  --success: #a3be8c;
+  --warning: #ebcb8b;
+  --info: #88c0d0;
+  --border: #4c566a;
+  --input: #4c566a;
+  --ring: #b48ead;
+  --sidebar: #222730;
+}
+
+[data-theme="gruvbox"] {
+  color-scheme: dark;
+  --background: #282828;
+  --foreground: #d4be98;
+  --card: #1e1e1e;
+  --card-foreground: #d4be98;
+  --popover: #1e1e1e;
+  --popover-foreground: #d4be98;
+  --primary: #d3869b;
+  --primary-foreground: #161616;
+  --secondary: #3c3836;
+  --secondary-foreground: #d4be98;
+  --muted: #3c3836;
+  --muted-foreground: #bdae93;
+  --accent: #504945;
+  --accent-foreground: #d4be98;
+  --destructive: #ea6962;
+  --destructive-foreground: #1e1e1e;
+  --success: #a9b665;
+  --warning: #d8a657;
+  --info: #7daea3;
+  --border: #665c54;
+  --input: #665c54;
+  --ring: #d3869b;
+  --sidebar: #1e1e1e;
+}
+
+[data-theme="everforest"] {
+  color-scheme: dark;
+  --background: #2d353b;
+  --foreground: #d3c6aa;
+  --card: #21272c;
+  --card-foreground: #d3c6aa;
+  --popover: #21272c;
+  --popover-foreground: #d3c6aa;
+  --primary: #d699b6;
+  --primary-foreground: #181d20;
+  --secondary: #343f44;
+  --secondary-foreground: #d3c6aa;
+  --muted: #343f44;
+  --muted-foreground: #9da9a0;
+  --accent: #3d484d;
+  --accent-foreground: #d3c6aa;
+  --destructive: #e67e80;
+  --destructive-foreground: #21272c;
+  --success: #a7c080;
+  --warning: #dbbc7f;
+  --info: #7fbbb3;
+  --border: #475258;
+  --input: #475258;
+  --ring: #d699b6;
+  --sidebar: #21272c;
+}
+
+[data-theme="kanagawa"] {
+  color-scheme: dark;
+  --background: #1f1f28;
+  --foreground: #dcd7ba;
+  --card: #17171e;
+  --card-foreground: #dcd7ba;
+  --popover: #17171e;
+  --popover-foreground: #dcd7ba;
+  --primary: #957fb8;
+  --primary-foreground: #111116;
+  --secondary: #223249;
+  --secondary-foreground: #dcd7ba;
+  --muted: #223249;
+  --muted-foreground: #c8c093;
+  --accent: #363646;
+  --accent-foreground: #dcd7ba;
+  --destructive: #e82424;
+  --destructive-foreground: #17171e;
+  --success: #98bb6c;
+  --warning: #ff9e3b;
+  --info: #658594;
+  --border: #54546d;
+  --input: #54546d;
+  --ring: #957fb8;
+  --sidebar: #17171e;
+}
+
+[data-theme="matte-black"] {
+  color-scheme: dark;
+  --background: #121212;
+  --foreground: #bebebe;
+  --card: #0d0d0d;
+  --card-foreground: #bebebe;
+  --popover: #0d0d0d;
+  --popover-foreground: #bebebe;
+  --primary: #e68e0d;
+  --primary-foreground: #090909;
+  --secondary: #1e1e1e;
+  --secondary-foreground: #bebebe;
+  --muted: #1e1e1e;
+  --muted-foreground: #8a8a8d;
+  --accent: #2a2a2a;
+  --accent-foreground: #bebebe;
+  --destructive: #dc2626;
+  --destructive-foreground: #0d0d0d;
+  --success: #10b981;
+  --warning: #d97706;
+  --info: #3b82f6;
+  --border: #333333;
+  --input: #333333;
+  --ring: #e68e0d;
+  --sidebar: #0d0d0d;
+}
+
+/* wiki graph palette */
+/* Categorical colors for the wiki knowledge graph (R-MEM-9), taken from each theme's accents. */
+:root,
+[data-theme="latte"] {
+  --graph-1: #1e66f5;
+  --graph-2: #fe640b;
+  --graph-3: #40a02b;
+  --graph-4: #8839ef;
+  --graph-5: #d20f39;
+  --graph-6: #179299;
+  --graph-7: #df8e1d;
+  --graph-8: #ea76cb;
+  --graph-9: #04a5e5;
+  --graph-10: #e64553;
+  --graph-11: #7287fd;
+  --graph-12: #dc8a78;
+}
+
+[data-theme="mocha"] {
+  --graph-1: #89b4fa;
+  --graph-2: #fab387;
+  --graph-3: #a6e3a1;
+  --graph-4: #cba6f7;
+  --graph-5: #f38ba8;
+  --graph-6: #94e2d5;
+  --graph-7: #f9e2af;
+  --graph-8: #f5c2e7;
+  --graph-9: #89dceb;
+  --graph-10: #eba0ac;
+  --graph-11: #b4befe;
+  --graph-12: #f2cdcd;
+}
+
+[data-theme="tokyo-night"] {
+  --graph-1: #7aa2f7;
+  --graph-2: #ff9e64;
+  --graph-3: #9ece6a;
+  --graph-4: #bb9af7;
+  --graph-5: #f7768e;
+  --graph-6: #1abc9c;
+  --graph-7: #e0af68;
+  --graph-8: #ff007c;
+  --graph-9: #7dcfff;
+  --graph-10: #db4b4b;
+  --graph-11: #9d7cd8;
+  --graph-12: #b4f9f8;
+}
+[data-theme="tokyo-night-light"] {
+  --graph-1: #2959aa;
+  --graph-2: #a27629;
+  --graph-3: #587539;
+  --graph-4: #9854f1;
+  --graph-5: #f52a65;
+  --graph-6: #007197;
+  --graph-7: #8c6c3e;
+  --graph-8: #6172b0;
+  --graph-9: #358aff;
+  --graph-10: #5c8524;
+  --graph-11: #a463ff;
+  --graph-12: #007ea8;
+}
+[data-theme="rose-pine"] {
+  --graph-1: #56949f;
+  --graph-2: #cf8057;
+  --graph-3: #286983;
+  --graph-4: #907aa9;
+  --graph-5: #b4637a;
+  --graph-6: #d7827e;
+  --graph-7: #ea9d34;
+  --graph-8: #67402b;
+  --graph-9: #56949f;
+  --graph-10: #286983;
+  --graph-11: #907aa9;
+  --graph-12: #d7827e;
+}
+[data-theme="nord"] {
+  --graph-1: #81a1c1;
+  --graph-2: #d5967a;
+  --graph-3: #a3be8c;
+  --graph-4: #b48ead;
+  --graph-5: #bf616a;
+  --graph-6: #88c0d0;
+  --graph-7: #ebcb8b;
+  --graph-8: #6a4b3d;
+  --graph-9: #81a1c1;
+  --graph-10: #a3be8c;
+  --graph-11: #b48ead;
+  --graph-12: #8fbcbb;
+}
+[data-theme="gruvbox"] {
+  --graph-1: #7daea3;
+  --graph-2: #e1875c;
+  --graph-3: #a9b665;
+  --graph-4: #d3869b;
+  --graph-5: #ea6962;
+  --graph-6: #89b482;
+  --graph-7: #d8a657;
+  --graph-8: #70432e;
+  --graph-9: #7daea3;
+  --graph-10: #a9b665;
+  --graph-11: #d3869b;
+  --graph-12: #89b482;
+}
+[data-theme="everforest"] {
+  --graph-1: #7fbbb3;
+  --graph-2: #e09d7f;
+  --graph-3: #a7c080;
+  --graph-4: #d699b6;
+  --graph-5: #e67e80;
+  --graph-6: #83c092;
+  --graph-7: #dbbc7f;
+  --graph-8: #704e3f;
+  --graph-9: #7fbbb3;
+  --graph-10: #a7c080;
+  --graph-11: #d699b6;
+  --graph-12: #83c092;
+}
+[data-theme="kanagawa"] {
+  --graph-1: #7e9cd8;
+  --graph-2: #c17158;
+  --graph-3: #76946a;
+  --graph-4: #957fb8;
+  --graph-5: #c34043;
+  --graph-6: #6a9589;
+  --graph-7: #c0a36e;
+  --graph-8: #60382c;
+  --graph-9: #7fb4ca;
+  --graph-10: #98bb6c;
+  --graph-11: #938aa9;
+  --graph-12: #7aa89f;
+}
+[data-theme="matte-black"] {
+  --graph-1: #e68e0d;
+  --graph-2: #c63d3d;
+  --graph-3: #8a9a5b;
+  --graph-4: #e68e0d;
+  --graph-5: #d35f5f;
+  --graph-6: #8a8a8d;
+  --graph-7: #f59e0b;
+  --graph-8: #631e1e;
+  --graph-9: #e68e0d;
+  --graph-10: #8a9a5b;
+  --graph-11: #e68e0d;
+  --graph-12: #8a8a8d;
+}
+/* end wiki graph palette */
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: ui-sans-serif, system-ui, sans-serif;
+  }
+
+  /* Whatever the keyboard reaches shows it, in the theme's color; components may draw their own. */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+
+/* Rendered Markdown in colleague answers. */
+@layer components {
+  .markdown {
+    @apply space-y-3 leading-relaxed break-words;
+  }
+  .markdown :where(h1, h2, h3, h4) {
+    @apply mt-4 font-semibold;
+  }
+  .markdown h1 {
+    @apply text-lg;
+  }
+  .markdown :where(ul) {
+    @apply list-disc space-y-1 pl-5;
+  }
+  .markdown :where(ol) {
+    @apply list-decimal space-y-1 pl-5;
+  }
+  .markdown a {
+    @apply text-primary underline underline-offset-2;
+  }
+  .markdown :where(code) {
+    @apply rounded bg-muted px-1 py-0.5 font-mono text-[0.85em];
+  }
+  .markdown pre {
+    @apply overflow-x-auto rounded-md bg-muted p-3 text-xs;
+  }
+  .markdown pre code {
+    @apply bg-transparent p-0;
+  }
+  .markdown a.wiki-missing {
+    @apply text-destructive decoration-dashed;
+  }
+  .markdown blockquote {
+    @apply border-l-2 border-primary/50 pl-3 text-muted-foreground;
+  }
+  .markdown table {
+    @apply block w-full overflow-x-auto text-sm;
+  }
+  .markdown :where(th, td) {
+    @apply border px-2 py-1 text-left;
+  }
+}
+
+/* Syntax highlighting (Shiki): colors of every theme come as CSS variables on each token. */
+.code-block pre {
+  margin: 0;
+  padding: 0.75rem;
+  border-radius: 0;
+  background-color: transparent;
+}
+.code-block .shiki,
+.code-block .shiki span {
+  color: var(--shiki-latte);
+}
+[data-theme="rose-pine"] .code-block .shiki,
+[data-theme="rose-pine"] .code-block .shiki span,
+[data-theme="tokyo-night-light"] .code-block .shiki,
+[data-theme="tokyo-night-light"] .code-block .shiki span {
+  color: var(--shiki-latte);
+}
+[data-theme="mocha"] .code-block .shiki,
+[data-theme="mocha"] .code-block .shiki span,
+[data-theme="matte-black"] .code-block .shiki,
+[data-theme="matte-black"] .code-block .shiki span {
+  color: var(--shiki-mocha);
+}
+[data-theme="tokyo-night"] .code-block .shiki,
+[data-theme="tokyo-night"] .code-block .shiki span,
+[data-theme="nord"] .code-block .shiki,
+[data-theme="nord"] .code-block .shiki span {
+  color: var(--shiki-tokyo-night);
+}
+[data-theme="gruvbox"] .code-block .shiki,
+[data-theme="gruvbox"] .code-block .shiki span,
+[data-theme="everforest"] .code-block .shiki,
+[data-theme="everforest"] .code-block .shiki span,
+[data-theme="kanagawa"] .code-block .shiki,
+[data-theme="kanagawa"] .code-block .shiki span {
+  color: var(--shiki-gruvbox);
+}
+
+/* A thin scrollbar in the theme's accent color, for strips that scroll sideways (the conversation tabs).
+   Chromium and Safari draw the ::-webkit-scrollbar parts only when scrollbar-width and
+   scrollbar-color are not set, so those two are left to the browsers without the parts (Firefox). */
+.strip-scrollbar::-webkit-scrollbar {
+  height: 4px;
+  width: 4px;
+}
+.strip-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.strip-scrollbar::-webkit-scrollbar-thumb {
+  border-radius: 9999px;
+  background-color: color-mix(in srgb, var(--primary) 45%, transparent);
+}
+.strip-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: var(--primary);
+}
+@supports not selector(::-webkit-scrollbar) {
+  .strip-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--primary) 45%, transparent) transparent;
+  }
+}

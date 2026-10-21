@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Orlok</title>
+    <!-- Installable app (R-CHAT-1). -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="theme-color" content="#1e1e2e" />
+    <script>
+      // Apply the stored theme and language before the first render, avoiding flashes (R-UI-3, R-I18N-2).
+      // Keys and values must stay in sync with packages/shared (theme.ts, i18n.ts) and src/i18n.
+      (() => {
+        const light = ["latte", "rose-pine", "tokyo-night-light"];
+        const dark = [
+          "mocha",
+          "tokyo-night",
+          "nord",
+          "gruvbox",
+          "everforest",
+          "kanagawa",
+          "matte-black",
+        ];
+        const themes = ["system", ...light, ...dark];
+        const locales = ["en", "it"];
+        const root = document.documentElement;
+        let pref = "system";
+        let locale = null;
+        try {
+          pref = localStorage.getItem("orlok-theme") ?? "system";
+          locale = localStorage.getItem("orlok-locale");
+        } catch {
+          // Storage unavailable: fall back to browser settings.
+        }
+        if (!themes.includes(pref)) pref = "system";
+        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        const theme = pref === "system" ? (prefersDark ? "mocha" : "latte") : pref;
+        root.dataset.theme = theme;
+        root.classList.toggle("dark", dark.includes(theme));
+        if (!locales.includes(locale)) {
+          const browser = navigator.languages.map((l) => l.toLowerCase().split(/[-_]/)[0]);
+          locale = browser.find((l) => locales.includes(l)) ?? "en";
+        }
+        root.lang = locale;
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

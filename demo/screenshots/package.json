@@ -1,0 +1,13 @@
+{
+  "name": "orlok-screenshots",
+  "private": true,
+  "license": "BUSL-1.1",
+  "type": "module",
+  "description": "Screenshots of a demo Orlok for the website; not part of the workspace or the image",
+  "scripts": {
+    "shoot": "node shoot.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0"
+  }
+}

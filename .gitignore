@@ -1,0 +1,21 @@
+node_modules/
+dist/
+build/
+.env
+.env.*
+!.env.example
+!.env.production.example
+*.log
+.DS_Store
+# Serena: commit memories and project.yml only (local cache/config excluded)
+.serena/*
+!.serena/memories/
+!.serena/project.yml
+coverage/
+*.tsbuildinfo
+# Built-in embedding model files (fetched by apps/server/scripts/fetch-models.mjs)
+apps/server/models/
+
+# Demo (demo/): app paths written by the seed
+demo/screenshots/paths.json
+demo/screenshots/paths-video.json

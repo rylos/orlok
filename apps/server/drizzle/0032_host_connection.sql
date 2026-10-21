@@ -1,0 +1,1 @@
+ALTER TABLE "hosts" ADD COLUMN "connection" text DEFAULT 'ssh' NOT NULL;

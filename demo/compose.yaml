@@ -1,0 +1,53 @@
+# Orlok demo: a throwaway installation with fictional data (demo/seed) for screenshots and
+# presentations, reachable only from this computer. Start and fill it with demo/setup.sh, which
+# also writes the random secrets of demo/.env (never committed).
+#
+# The runner is demo/screenshots/demo-runner.mjs: it never connects to anything and answers the
+# demo's commands with made-up output. Never put real data or real hosts in here.
+name: orlok-demo
+
+services:
+  db:
+    image: pgvector/pgvector:pg18
+    environment:
+      POSTGRES_USER: orlok
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?run demo/setup.sh}
+      POSTGRES_DB: orlok_demo
+    volumes:
+      - db-data:/var/lib/postgresql
+    ports:
+      # The seed connects from this computer.
+      - "127.0.0.1:5544:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U orlok -d orlok_demo"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: orlok:demo
+    environment:
+      DATABASE_URL: postgres://orlok:${POSTGRES_PASSWORD:?run demo/setup.sh}@db:5432/orlok_demo
+      ORLOK_SECRET_KEY: ${ORLOK_SECRET_KEY:?run demo/setup.sh}
+      ORLOK_PUBLIC_URL: http://localhost:3999
+      ORLOK_RUNNER_URL: http://runner:8790
+      ORLOK_RUNNER_TOKEN: ${ORLOK_RUNNER_TOKEN:?run demo/setup.sh}
+    ports:
+      - "127.0.0.1:3999:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  runner:
+    image: node:24-bookworm
+    command: ["node", "/s/demo-runner.mjs", "--seconds", "6"]
+    environment:
+      ORLOK_RUNNER_TOKEN: ${ORLOK_RUNNER_TOKEN:?run demo/setup.sh}
+    volumes:
+      - ./screenshots:/s:ro
+
+volumes:
+  db-data:

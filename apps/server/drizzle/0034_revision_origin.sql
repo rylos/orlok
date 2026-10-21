@@ -1,0 +1,1 @@
+ALTER TABLE "wiki_revisions" ADD COLUMN "origin" jsonb;

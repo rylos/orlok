@@ -1,0 +1,17 @@
+# Build context for every image built from the repository root (Dockerfile, apps/runner/Dockerfile).
+**/node_modules
+**/dist
+**/coverage
+**/*.tsbuildinfo
+.git
+.env
+.env.*
+!.env.example
+.serena
+.claude
+docs
+demo
+# Fetched inside the image build (models stage of the root Dockerfile).
+apps/server/models
+Dockerfile
+compose*.yaml

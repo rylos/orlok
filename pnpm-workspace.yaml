@@ -1,0 +1,8 @@
+packages:
+  - apps/*
+  - packages/*
+  - demo/seed
+allowBuilds:
+  esbuild: true
+  protobufjs: false
+  tesseract.js: false

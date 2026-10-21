@@ -1,0 +1,1 @@
+ALTER TABLE "colleagues" ADD COLUMN "notes" text DEFAULT '' NOT NULL;

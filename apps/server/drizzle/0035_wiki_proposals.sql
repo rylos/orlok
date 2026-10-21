@@ -1,0 +1,1 @@
+ALTER TABLE "wiki_review_items" ADD COLUMN "proposal" jsonb;

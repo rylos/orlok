@@ -1,0 +1,92 @@
+# Orlok production stack (R-PRD-1): Postgres with pgvector, the app and the isolated runner.
+#
+#   cp .env.production.example .env.production   # then fill in the secrets
+#   docker compose --env-file .env.production up -d --build
+#
+# Only the app publishes a port. Behind a reverse proxy, forward X-Forwarded-Host and
+# X-Forwarded-Proto and set ORLOK_PUBLIC_URL to the address people use.
+name: orlok
+
+services:
+  db:
+    image: pgvector/pgvector:pg18
+    environment:
+      # User and database are created on the first start, on an empty volume.
+      POSTGRES_USER: ${POSTGRES_USER:-orlok}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-orlok}
+    volumes:
+      # Since Postgres 18 the volume is mounted on the parent folder (data lives in a per-version subfolder).
+      - db-data:/var/lib/postgresql
+    networks: [db]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ${ORLOK_APP_IMAGE:-orlok:latest}
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-orlok}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-orlok}
+      ORLOK_SECRET_KEY: ${ORLOK_SECRET_KEY:?set ORLOK_SECRET_KEY}
+      ORLOK_PUBLIC_URL: ${ORLOK_PUBLIC_URL:?set ORLOK_PUBLIC_URL}
+      ORLOK_RUNNER_URL: http://runner:3100
+      ORLOK_RUNNER_TOKEN: ${ORLOK_RUNNER_TOKEN:?set ORLOK_RUNNER_TOKEN}
+      ORLOK_EMBEDDINGS_THREADS: ${ORLOK_EMBEDDINGS_THREADS:-}
+      # What is running, shown at the bottom of the menu: a container cannot read its own tag.
+      ORLOK_IMAGE: ${ORLOK_APP_IMAGE:-orlok:latest}
+    ports:
+      - "${ORLOK_PORT:-8080}:3000"
+    networks: [db, runner]
+    depends_on:
+      db:
+        condition: service_healthy
+      runner:
+        condition: service_started
+    read_only: true
+    tmpfs:
+      # The only writable path: OCR language data links and temporary files.
+      - /tmp:mode=1777,size=512m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    init: false
+    restart: unless-stopped
+
+  runner:
+    build:
+      context: .
+      dockerfile: apps/runner/Dockerfile
+    image: ${ORLOK_RUNNER_IMAGE:-orlok-runner:latest}
+    environment:
+      ORLOK_RUNNER_TOKEN: ${ORLOK_RUNNER_TOKEN:?set ORLOK_RUNNER_TOKEN}
+      ORLOK_RUNNER_SANDBOX_UID_BASE: "20000"
+    # No ports: only the app reaches it. Not on the db network, no volumes with Orlok data.
+    networks: [runner]
+    read_only: true
+    tmpfs:
+      # exec is required: uvx environments and the SSH askpass helper run from here.
+      - /tmp:exec,mode=1777,size=1g
+    cap_drop: [ALL]
+    # SETUID/SETGID: the sandbox launcher switches jobs to their own uid. NET_RAW: raw ICMP.
+    cap_add: [SETUID, SETGID, NET_RAW]
+    # Do not set security_opt no-new-privileges: it disables the launcher's file capabilities.
+    pids_limit: 2048
+    init: false
+    restart: unless-stopped
+
+# Docker names the volume and the networks after the project: orlok_db-data, orlok_db,
+# orlok_runner.
+networks:
+  # Postgres is reachable only from the app.
+  db:
+  # The runner needs outbound access (SSH to office servers, MCP servers) but never sees Postgres.
+  runner:
+
+volumes:
+  db-data:

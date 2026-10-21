@@ -1,0 +1,20 @@
+{
+  "name": "@orlok/demo-seed",
+  "private": true,
+  "license": "BUSL-1.1",
+  "type": "module",
+  "description": "Fictional demo data (Acme) for screenshots and presentations; never in the image",
+  "scripts": {
+    "seed": "tsx demo-seed.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@orlok/shared": "workspace:*",
+    "drizzle-orm": "^0.45.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.2",
+    "tsx": "^4.23.13",
+    "typescript": "^6.0.3"
+  }
+}

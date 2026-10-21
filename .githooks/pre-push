@@ -1,0 +1,16 @@
+#!/bin/sh
+# Refuses to delete or force-push main: GitHub branch protection needs a paid plan on private
+# repositories, so the guard lives in the repository. Bypass on purpose with --no-verify.
+zero=0000000000000000000000000000000000000000
+while read -r _local_ref local_sha remote_ref remote_sha; do
+  [ "$remote_ref" = "refs/heads/main" ] || continue
+  if [ "$local_sha" = "$zero" ]; then
+    echo "pre-push: refusing to delete main" >&2
+    exit 1
+  fi
+  if [ "$remote_sha" != "$zero" ] && ! git merge-base --is-ancestor "$remote_sha" "$local_sha"; then
+    echo "pre-push: refusing to force-push main (commits on the remote would be lost)" >&2
+    exit 1
+  fi
+done
+exit 0

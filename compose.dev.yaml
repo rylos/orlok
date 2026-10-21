@@ -1,0 +1,25 @@
+# Local development only: Postgres with pgvector. The production stack is compose.yaml.
+# The project name keeps container and volume names (orlok-db-1, orlok_db-data) whatever the
+# folder of the checkout is called.
+name: orlok
+
+services:
+  db:
+    image: pgvector/pgvector:pg18
+    environment:
+      POSTGRES_USER: orlok
+      POSTGRES_PASSWORD: orlok
+      POSTGRES_DB: orlok
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      # Since Postgres 18 the volume is mounted on the parent folder (data lives in a per-version subfolder).
+      - db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U orlok -d orlok"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  db-data:
