@@ -7,6 +7,8 @@ build/
 !.env.production.example
 *.log
 .DS_Store
+# Local changes to compose.yaml on an installation (merged by Docker Compose on its own)
+compose.override.yaml
 # Serena: commit memories and project.yml only (local cache/config excluded)
 .serena/*
 !.serena/memories/
