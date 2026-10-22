@@ -12,7 +12,7 @@ import {
   prepareAttachment,
   toChatAttachment,
 } from "../services/chat-attachments";
-import { findOwnColleague, isActive } from "../services/colleagues";
+import { findTalkableColleague, isActive } from "../services/colleagues";
 import type { AppEnv, Deps } from "../types";
 
 const attachmentNotFound = errorBody("not_found", "Attachment not found");
@@ -26,7 +26,7 @@ const messages = {
 // Files attached to chat messages (R-CHAT-3), private to the person who uploaded them.
 export function attachmentRoutes({ db }: Deps) {
   async function canUseColleague(user: Me, colleagueId: string) {
-    const row = await findOwnColleague(db, user, colleagueId);
+    const row = await findTalkableColleague(db, user, colleagueId);
     return Boolean(row && isActive(row.colleague));
   }
 
@@ -39,7 +39,7 @@ export function attachmentRoutes({ db }: Deps) {
     if (!row) {
       return null;
     }
-    return (await findOwnColleague(db, user, row.colleagueId)) ? row : null;
+    return (await findTalkableColleague(db, user, row.colleagueId)) ? row : null;
   }
 
   return (

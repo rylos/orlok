@@ -11,6 +11,8 @@ import {
   colleagueNameTaken,
   deleteColleague,
   findOwnColleague,
+  findTalkableColleague,
+  needsProfile,
   profileGranted,
   toColleague,
 } from "../services/colleagues";
@@ -58,16 +60,16 @@ export function colleagueRoutes({ db }: Deps) {
         }
         return c.json(toColleague(row, false), 201);
       })
+      // Also the colleague of one of the person's offices (R-ADM-8), without the instructions an
+      // administrator gave it: they set it up in Admin → Offices.
       .get("/:id", validate("param", idParamSchema), async (c) => {
-        const user = currentUser(c);
-        const found = await findOwnColleague(db, user, c.req.valid("param").id);
+        const found = await findTalkableColleague(db, currentUser(c), c.req.valid("param").id);
         if (!found) {
           return c.json(colleagueNotFound, 404);
         }
         const { colleague } = found;
-        return c.json(
-          toColleague(colleague, !(await profileGranted(db, user.id, colleague.profileId))),
-        );
+        const item = toColleague(colleague, await needsProfile(db, colleague));
+        return c.json(colleague.officeWide ? { ...item, instructions: "" } : item);
       })
       .patch(
         "/:id",

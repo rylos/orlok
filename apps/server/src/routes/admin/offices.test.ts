@@ -90,7 +90,7 @@ describe("offices administration", () => {
     expect((await asAdmin(`/colleagues/${colleague.id}`)).status).toBe(404);
   });
 
-  it("lists offices without anyone's colleagues", async () => {
+  it("lists offices without anyone's own colleagues", async () => {
     const office = await createOffice();
     await addColleague(office.id);
     const list = (await (await asAdmin("/admin/offices")).json()) as AdminOffice[];
@@ -101,6 +101,8 @@ describe("offices administration", () => {
         description: "IT support",
         createdAt: expect.any(String),
         wikiPages: 0,
+        // Only the office colleague, set up here by administrators (R-ADM-8).
+        colleague: null,
       },
     ]);
   });

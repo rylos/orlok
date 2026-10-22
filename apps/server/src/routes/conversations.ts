@@ -8,7 +8,7 @@ import {
   messageParamSchema,
   wikiCandidateParamSchema,
 } from "@orlok/shared/schemas";
-import { and, asc, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, or } from "drizzle-orm";
 import { Hono } from "hono";
 import { type SSEStreamingApi, streamSSE } from "hono/streaming";
 import { currentUser, requireUser } from "../auth/middleware";
@@ -21,7 +21,7 @@ import {
   listAttachmentsByMessage,
 } from "../services/chat-attachments";
 import { runColleagueTurn } from "../services/colleague-turn";
-import { findOwnColleague, isActive } from "../services/colleagues";
+import { findTalkableColleague, isActive } from "../services/colleagues";
 import { titleFromMessage, toConversationSummary, toMessage } from "../services/conversations";
 import { conversationChanged } from "../services/live-events";
 import { resolveColleagueModel } from "../services/models";
@@ -35,6 +35,11 @@ import type { AppEnv, Deps } from "../types";
 const conversationNotFound = errorBody("not_found", "Conversation not found");
 const colleagueNotFound = errorBody("not_found", "Colleague not found");
 const turnInProgress = errorBody("turn_in_progress", "The colleague is still answering");
+// The office colleague only reads the wiki: nothing of its conversations is filed (R-ADM-8).
+const officeColleagueReadsOnly = errorBody(
+  "conflict",
+  "The office colleague does not file into the wiki",
+);
 
 // Watches a running turn for one page, from its beginning. Registered at once, before the
 // response exists, so an answer that ends quickly is not missed; the events wait in order until
@@ -84,8 +89,8 @@ function watchTurn(conversationId: string) {
   };
 }
 
-// Conversations of the signed-in person with their own AI colleagues (R-CHAT-2, R-ADM-3), only
-// while they can still access the colleague's office.
+// Conversations of the signed-in person with their own AI colleagues (R-CHAT-2, R-ADM-3) and with
+// the colleague of their offices (R-ADM-8), only while they can still access the office.
 export function conversationRoutes(deps: Deps) {
   const { db } = deps;
   async function findOwnConversation(user: Me, id: string) {
@@ -98,7 +103,7 @@ export function conversationRoutes(deps: Deps) {
         and(
           eq(conversations.id, id),
           eq(conversations.userId, user.id),
-          eq(colleagues.userId, user.id),
+          or(eq(colleagues.userId, user.id), eq(colleagues.officeWide, true)),
         ),
       )
       .limit(1);
@@ -167,7 +172,7 @@ export function conversationRoutes(deps: Deps) {
         const user = currentUser(c);
         const { colleagueId } = c.req.valid("query");
         // An archived colleague's conversations can still be read.
-        if (!(await findOwnColleague(db, user, colleagueId))) {
+        if (!(await findTalkableColleague(db, user, colleagueId))) {
           return c.json(colleagueNotFound, 404);
         }
         const rows = await db
@@ -208,7 +213,7 @@ export function conversationRoutes(deps: Deps) {
       .post("/", validate("json", conversationCreateSchema), async (c) => {
         const user = currentUser(c);
         const { colleagueId } = c.req.valid("json");
-        const found = await findOwnColleague(db, user, colleagueId);
+        const found = await findTalkableColleague(db, user, colleagueId);
         if (!found || !isActive(found.colleague)) {
           return c.json(colleagueNotFound, 404);
         }
@@ -403,6 +408,9 @@ export function conversationRoutes(deps: Deps) {
         if (!row) {
           return c.json(conversationNotFound, 404);
         }
+        if (row.colleague.officeWide) {
+          return c.json(officeColleagueReadsOnly, 409);
+        }
         const thread = await db
           .select()
           .from(messages)
@@ -451,6 +459,9 @@ export function conversationRoutes(deps: Deps) {
           const candidate = row?.conversation.wikiCandidates[index];
           if (!row || !candidate) {
             return c.json(errorBody("not_found", "Proposal not found"), 404);
+          }
+          if (row.colleague.officeWide) {
+            return c.json(officeColleagueReadsOnly, 409);
           }
           const thread = await db
             .select({ role: messages.role, content: messages.content })

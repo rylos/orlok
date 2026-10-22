@@ -36,3 +36,8 @@ export const colleagueUpdateSchema = z.object({
   profileId: profileIdSchema.optional(),
   archived: z.boolean().optional(),
 });
+
+// The office colleague, set up by an administrator (R-ADM-8): any profile, no private notes.
+export const officeColleagueCreateSchema = colleagueCreateSchema.omit({ officeId: true });
+
+export const officeColleagueUpdateSchema = colleagueUpdateSchema.omit({ notes: true });

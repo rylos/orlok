@@ -1,5 +1,5 @@
 import type { Colleague, Me } from "@orlok/shared";
-import { and, eq, inArray, isNull, ne, sql } from "drizzle-orm";
+import { and, eq, inArray, isNull, ne, or, sql } from "drizzle-orm";
 import type { Db } from "../db/client";
 import {
   type ColleagueRow,
@@ -16,7 +16,9 @@ import { canAccessOffice } from "./offices";
 import type { DbExecutor } from "./wiki";
 
 // Colleagues are personal (R-ADM-3): each belongs to the person who created it, works only for
-// them and only with the profiles they are granted (R-MOD-2).
+// them and only with the profiles they are granted (R-MOD-2). The office colleague is the
+// exception (R-ADM-8): an administrator sets it up with any profile, everyone in the office talks
+// with it, and it only reads the wiki.
 
 export function toColleague(row: ColleagueRow, needsProfile: boolean): Colleague {
   return {
@@ -29,6 +31,7 @@ export function toColleague(row: ColleagueRow, needsProfile: boolean): Colleague
     profileId: row.profileId,
     needsProfile,
     archivedAt: row.archivedAt?.toISOString() ?? null,
+    officeWide: row.officeWide,
     createdAt: row.createdAt.toISOString(),
   };
 }
@@ -58,7 +61,14 @@ export async function findOwnColleague(db: Db, user: Me, id: string) {
     .select({ colleague: colleagues, office: offices })
     .from(colleagues)
     .innerJoin(offices, eq(colleagues.officeId, offices.id))
-    .where(and(eq(colleagues.id, id), eq(colleagues.userId, user.id), isNull(colleagues.deletedAt)))
+    .where(
+      and(
+        eq(colleagues.id, id),
+        eq(colleagues.userId, user.id),
+        eq(colleagues.officeWide, false),
+        isNull(colleagues.deletedAt),
+      ),
+    )
     .limit(1);
   if (!row || !(await canAccessOffice(db, user, row.office.id))) {
     return null;
@@ -66,15 +76,64 @@ export async function findOwnColleague(db: Db, user: Me, id: string) {
   return row;
 }
 
+// A colleague the signed-in person may talk with: one of their own, archived or not, or the
+// colleague of one of their offices while it is not archived.
+export async function findTalkableColleague(db: Db, user: Me, id: string) {
+  const [row] = await db
+    .select({ colleague: colleagues, office: offices })
+    .from(colleagues)
+    .innerJoin(offices, eq(colleagues.officeId, offices.id))
+    .where(
+      and(
+        eq(colleagues.id, id),
+        or(
+          and(eq(colleagues.userId, user.id), eq(colleagues.officeWide, false)),
+          and(eq(colleagues.officeWide, true), isNull(colleagues.archivedAt)),
+        ),
+        isNull(colleagues.deletedAt),
+      ),
+    )
+    .limit(1);
+  if (!row || !(await canAccessOffice(db, user, row.office.id))) {
+    return null;
+  }
+  return row;
+}
+
+// The colleague of an office, archived or not (R-ADM-8).
+export async function findOfficeColleague(db: Db, officeId: string) {
+  const [row] = await db
+    .select()
+    .from(colleagues)
+    .where(
+      and(
+        eq(colleagues.officeId, officeId),
+        eq(colleagues.officeWide, true),
+        isNull(colleagues.deletedAt),
+      ),
+    )
+    .limit(1);
+  return row ?? null;
+}
+
+// Whether a colleague waits for a profile: a personal one needs a profile its owner is still
+// granted, the office colleague only one that still exists.
+export async function needsProfile(db: Db, row: ColleagueRow) {
+  return row.officeWide
+    ? row.profileId === null
+    : !(await profileGranted(db, row.userId, row.profileId));
+}
+
 // A colleague that may work without its owner watching (documents, wiki checks, the end of a
-// command): not archived or deleted, and its owner can still sign in.
+// command): not archived or deleted, and its owner can still sign in. Never the office colleague,
+// which only reads.
 export async function findWorkingColleague(db: Db, id: string) {
   const [row] = await db
     .select({ colleague: colleagues, office: offices, owner: users })
     .from(colleagues)
     .innerJoin(offices, eq(colleagues.officeId, offices.id))
     .innerJoin(users, eq(colleagues.userId, users.id))
-    .where(eq(colleagues.id, id))
+    .where(and(eq(colleagues.id, id), eq(colleagues.officeWide, false)))
     .limit(1);
   if (!row || !isActive(row.colleague) || row.owner.disabledAt) {
     return null;
@@ -97,6 +156,7 @@ export async function colleagueNameTaken(
       and(
         eq(colleagues.userId, owner.userId),
         eq(colleagues.officeId, owner.officeId),
+        eq(colleagues.officeWide, false),
         sql`lower(${colleagues.name}) = lower(${name})`,
         isNull(colleagues.deletedAt),
         exceptId ? ne(colleagues.id, exceptId) : undefined,
@@ -179,6 +239,12 @@ export async function colleaguesWithoutGrant(db: DbExecutor, userId: string) {
         eq(profileGrants.profileId, colleagues.profileId),
       ),
     )
-    .where(and(eq(colleagues.userId, userId), isNull(profileGrants.profileId)));
+    .where(
+      and(
+        eq(colleagues.userId, userId),
+        eq(colleagues.officeWide, false),
+        isNull(profileGrants.profileId),
+      ),
+    );
   return rows.map((row) => row.id);
 }

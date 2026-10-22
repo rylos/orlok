@@ -101,6 +101,8 @@ export function wikiRoutes(deps: Deps) {
               eq(colleagues.id, colleagueId),
               eq(colleagues.officeId, officeId),
               eq(colleagues.userId, user.id),
+              // The office colleague only reads the wiki (R-ADM-8).
+              eq(colleagues.officeWide, false),
             ),
           )
           .limit(1)

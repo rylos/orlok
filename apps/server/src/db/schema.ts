@@ -235,6 +235,9 @@ export const colleagues = pgTable(
     // working context, kept by the colleague and its owner, never in the office wiki.
     notes: text("notes").notNull().default(""),
     profileId: uuid("profile_id").references(() => modelProfiles.id, { onDelete: "set null" }),
+    // The office colleague: one per office, set up by an administrator, read-only on the wiki and
+    // there for everyone in the office (R-ADM-8). Its owner is only who created it.
+    officeWide: boolean("office_wide").notNull().default(false),
     // Hidden and silent, with its conversations kept.
     archivedAt: timestamp("archived_at", { withTimezone: true }),
     // Deleted colleagues keep only their name and owner, so the wiki and the audit log still say
@@ -246,7 +249,10 @@ export const colleagues = pgTable(
   (table) => [
     uniqueIndex("colleagues_owner_name_idx")
       .on(table.userId, table.officeId, sql`lower(${table.name})`)
-      .where(sql`${table.deletedAt} is null`),
+      .where(sql`${table.deletedAt} is null and not ${table.officeWide}`),
+    uniqueIndex("colleagues_office_wide_idx")
+      .on(table.officeId)
+      .where(sql`${table.deletedAt} is null and ${table.officeWide}`),
     index("colleagues_office_idx").on(table.officeId),
   ],
 );

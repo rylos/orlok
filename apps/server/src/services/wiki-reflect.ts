@@ -122,7 +122,13 @@ export async function reflectOnConversations(deps: ReflectDeps, now = new Date()
     const userMessages = rows.filter((row) => row.role === "user").length;
     // A conversation that already wrote to the wiki has had its "should we keep this?".
     const wroteWiki = rows.some((row) => (row.wikiEdits?.length ?? 0) > 0);
-    if (userMessages < REFLECT_MIN_USER_MESSAGES || wroteWiki || !isActive(colleague)) {
+    // The office colleague proposes nothing for the wiki: its conversations stay private (R-ADM-8).
+    if (
+      userMessages < REFLECT_MIN_USER_MESSAGES ||
+      wroteWiki ||
+      !isActive(colleague) ||
+      colleague.officeWide
+    ) {
       await markRead();
       continue;
     }

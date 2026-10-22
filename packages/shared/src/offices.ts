@@ -2,6 +2,8 @@ import type { z } from "zod";
 import type {
   colleagueCreateSchema,
   colleagueUpdateSchema,
+  officeColleagueCreateSchema,
+  officeColleagueUpdateSchema,
   officeCreateSchema,
   officeUpdateSchema,
 } from "./schemas/offices";
@@ -16,6 +18,8 @@ export type OfficeCreateInput = z.input<typeof officeCreateSchema>;
 export type OfficeUpdateInput = z.input<typeof officeUpdateSchema>;
 export type ColleagueCreateInput = z.input<typeof colleagueCreateSchema>;
 export type ColleagueUpdateInput = z.input<typeof colleagueUpdateSchema>;
+export type OfficeColleagueCreateInput = z.input<typeof officeColleagueCreateSchema>;
+export type OfficeColleagueUpdateInput = z.input<typeof officeColleagueUpdateSchema>;
 
 export type Office = {
   id: string;
@@ -42,16 +46,21 @@ export type Colleague = {
   needsProfile: boolean;
   // Archived colleagues are hidden and do not answer; their conversations are kept.
   archivedAt: string | null;
+  // The office colleague (R-ADM-8): set up by an administrator, there for everyone in the office.
+  officeWide: boolean;
   createdAt: string;
 };
 
-export type AdminOffice = Office & { wikiPages: number };
+// The office colleague is listed with its office: administrators set it up there (R-ADM-8).
+export type AdminOffice = Office & { wikiPages: number; colleague: Colleague | null };
 
 export type WorkspaceColleague = {
   id: string;
   name: string;
   title: string;
   needsProfile: boolean;
+  // The office colleague (R-ADM-8): everyone in the office has it, only administrators change it.
+  officeWide: boolean;
   // When the signed-in person last talked with the colleague, if ever.
   lastTalkedAt: string | null;
 };

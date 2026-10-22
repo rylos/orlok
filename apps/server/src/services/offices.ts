@@ -1,5 +1,5 @@
 import type { AdminOffice, Me, Office, WorkspaceColleague, WorkspaceOffice } from "@orlok/shared";
-import { and, asc, eq, inArray, isNull, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import type { Db } from "../db/client";
 import {
   colleagues,
@@ -9,6 +9,7 @@ import {
   offices,
   profileGrants,
 } from "../db/schema";
+import { toColleague } from "./colleagues";
 import { countWikiPages } from "./wiki";
 
 export function toOffice(row: OfficeRow): Office {
@@ -50,13 +51,17 @@ export async function listWorkspaceOffices(db: Db, user: Me): Promise<WorkspaceO
   if (officeRows.length === 0) {
     return [];
   }
-  // Only the person's own colleagues: others' are private (R-ADM-3).
+  // The person's own colleagues, others' are private (R-ADM-3), and the colleague of each office
+  // while it is not archived (R-ADM-8).
   const colleagueRows = await db
     .select()
     .from(colleagues)
     .where(
       and(
-        eq(colleagues.userId, user.id),
+        or(
+          and(eq(colleagues.userId, user.id), eq(colleagues.officeWide, false)),
+          and(eq(colleagues.officeWide, true), isNull(colleagues.archivedAt)),
+        ),
         isNull(colleagues.deletedAt),
         inArray(
           colleagues.officeId,
@@ -90,7 +95,9 @@ export async function listWorkspaceOffices(db: Db, user: Me): Promise<WorkspaceO
       id: colleague.id,
       name: colleague.name,
       title: colleague.title,
-      needsProfile: !colleague.profileId || !granted.has(colleague.profileId),
+      needsProfile:
+        !colleague.profileId || (!colleague.officeWide && !granted.has(colleague.profileId)),
+      officeWide: colleague.officeWide,
       lastTalkedAt: lastTalked.get(colleague.id)?.toISOString() ?? null,
     });
     return {
@@ -103,13 +110,23 @@ export async function listWorkspaceOffices(db: Db, user: Me): Promise<WorkspaceO
   });
 }
 
-// Offices for administrators. Colleagues are not listed: they belong to each person.
+// Offices for administrators, each with its office colleague (R-ADM-8). Personal colleagues are
+// not listed: they belong to each person.
 export async function listAdminOffices(db: Db): Promise<AdminOffice[]> {
   const officeRows = await db.select().from(offices).orderBy(asc(offices.name));
   const pageCounts = await countWikiPages(db);
+  const officeColleagues = new Map(
+    (
+      await db
+        .select()
+        .from(colleagues)
+        .where(and(eq(colleagues.officeWide, true), isNull(colleagues.deletedAt)))
+    ).map((row) => [row.officeId, toColleague(row, row.profileId === null)]),
+  );
   return officeRows.map((office) => ({
     ...toOffice(office),
     wikiPages: pageCounts.get(office.id) ?? 0,
+    colleague: officeColleagues.get(office.id) ?? null,
   }));
 }
 

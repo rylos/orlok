@@ -1,5 +1,5 @@
 import type { Locale } from "@orlok/shared";
-import { and, asc, desc, eq, isNull } from "drizzle-orm";
+import { and, asc, desc, eq, isNull, or } from "drizzle-orm";
 import { toMe } from "../auth/sessions";
 import type { Db } from "../db/client";
 import {
@@ -10,6 +10,7 @@ import {
   opsJobs,
   opsPlans,
   telegramAccounts,
+  type UserRow,
   users,
 } from "../db/schema";
 import { decideJob } from "../ops/jobs";
@@ -19,6 +20,7 @@ import { isActive } from "../services/colleagues";
 import { titleFromMessage } from "../services/conversations";
 import { conversationChanged } from "../services/live-events";
 import { resolveColleagueModel } from "../services/models";
+import { canAccessOffice } from "../services/offices";
 import { runningTurns } from "../services/turn-registry";
 import type { Deps } from "../types";
 import {
@@ -123,13 +125,26 @@ async function accountByChat(db: Db, chatId: number) {
   return row && !row.user.disabledAt ? row : null;
 }
 
-async function activeColleagues(db: Db, userId: string) {
+// The person's own colleagues and the colleague of each of their offices (R-ADM-8).
+async function activeColleagues(db: Db, user: UserRow) {
   const rows = await db
     .select()
     .from(colleagues)
-    .where(and(eq(colleagues.userId, userId), isNull(colleagues.deletedAt)))
+    .where(
+      and(
+        or(
+          and(eq(colleagues.userId, user.id), eq(colleagues.officeWide, false)),
+          eq(colleagues.officeWide, true),
+        ),
+        isNull(colleagues.deletedAt),
+      ),
+    )
     .orderBy(asc(colleagues.name));
-  return rows.filter(isActive);
+  const me = toMe(user);
+  const reachable = await Promise.all(
+    rows.map((row) => (row.officeWide ? canAccessOffice(db, me, row.officeId) : true)),
+  );
+  return rows.filter((row, index) => isActive(row) && reachable[index]);
 }
 
 // Messages of one chat are handled in order, one turn at a time, without holding up the rest:
@@ -186,7 +201,7 @@ async function handleMessage(deps: TelegramDeps, api: TelegramApi, message: Tele
     return;
   }
   if (command === "colleague" || command === "colleagues" || command === "collega") {
-    await offerColleagues(db, api, chatId, user.id, user.locale);
+    await offerColleagues(db, api, chatId, user);
     return;
   }
   if (command === "conversations" || command === "conversazioni" || command === "chats") {
@@ -196,12 +211,12 @@ async function handleMessage(deps: TelegramDeps, api: TelegramApi, message: Tele
 
   // The colleague the chat talks to: the chosen one, or the only one the person has.
   let colleague = account.colleagueId
-    ? (await activeColleagues(db, user.id)).find((item) => item.id === account.colleagueId)
+    ? (await activeColleagues(db, user)).find((item) => item.id === account.colleagueId)
     : undefined;
   if (!colleague) {
-    const all = await activeColleagues(db, user.id);
+    const all = await activeColleagues(db, user);
     if (all.length !== 1) {
-      await offerColleagues(db, api, chatId, user.id, user.locale);
+      await offerColleagues(db, api, chatId, user);
       return;
     }
     colleague = all[0];
@@ -317,15 +332,9 @@ async function link(deps: TelegramDeps, api: TelegramApi, message: TelegramMessa
   await api.sendMessage(chatId, text(user.locale).linked(user.displayName));
 }
 
-async function offerColleagues(
-  db: Db,
-  api: TelegramApi,
-  chatId: number,
-  userId: string,
-  locale: Locale,
-) {
-  const all = await activeColleagues(db, userId);
-  const t = text(locale);
+async function offerColleagues(db: Db, api: TelegramApi, chatId: number, user: UserRow) {
+  const all = await activeColleagues(db, user);
+  const t = text(user.locale);
   if (all.length === 0) {
     await api.sendMessage(chatId, t.noColleagues);
     return;
@@ -404,7 +413,7 @@ async function handleCallback(deps: TelegramDeps, api: TelegramApi, query: Teleg
   const t = text(user.locale);
   const [kind, id, choice] = (query.data ?? "").split(":");
   if (kind === "c" && id) {
-    const colleague = (await activeColleagues(db, user.id)).find((item) => item.id === id);
+    const colleague = (await activeColleagues(db, user)).find((item) => item.id === id);
     if (colleague) {
       await db
         .update(telegramAccounts)

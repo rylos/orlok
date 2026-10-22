@@ -115,24 +115,33 @@ export async function backfillContextWindows(deps: {
 // it has none (R-MOD-2: no default) or the profile was taken away from its owner.
 export async function resolveColleagueModel(
   db: Db,
-  colleague: { userId: string; profileId: string | null },
+  colleague: { userId: string; profileId: string | null; officeWide?: boolean },
 ) {
   if (!colleague.profileId) {
     return null;
   }
-  const [row] = await db
-    .select({ profile: modelProfiles, provider: modelProviders })
-    .from(modelProfiles)
-    .innerJoin(modelProviders, eq(modelProfiles.providerId, modelProviders.id))
-    .innerJoin(
-      profileGrants,
-      and(
-        eq(profileGrants.profileId, modelProfiles.id),
-        eq(profileGrants.userId, colleague.userId),
-      ),
-    )
-    .where(eq(modelProfiles.id, colleague.profileId))
-    .limit(1);
+  // The office colleague answers with the profile an administrator chose, whoever holds it
+  // (R-ADM-8); a personal one only with a profile its owner is still granted.
+  const [row] = colleague.officeWide
+    ? await db
+        .select({ profile: modelProfiles, provider: modelProviders })
+        .from(modelProfiles)
+        .innerJoin(modelProviders, eq(modelProfiles.providerId, modelProviders.id))
+        .where(eq(modelProfiles.id, colleague.profileId))
+        .limit(1)
+    : await db
+        .select({ profile: modelProfiles, provider: modelProviders })
+        .from(modelProfiles)
+        .innerJoin(modelProviders, eq(modelProfiles.providerId, modelProviders.id))
+        .innerJoin(
+          profileGrants,
+          and(
+            eq(profileGrants.profileId, modelProfiles.id),
+            eq(profileGrants.userId, colleague.userId),
+          ),
+        )
+        .where(eq(modelProfiles.id, colleague.profileId))
+        .limit(1);
   return row ?? null;
 }
 

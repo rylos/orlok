@@ -244,46 +244,46 @@ async function answer(deps: Deps, input: TurnInput) {
       ...(opsJobIds.size > 0 ? { opsJobIds: [...opsJobIds] } : {}),
     }),
   });
-  const opsTools = await createOpsTools({
-    deps,
-    officeId: office.id,
-    colleagueId: colleague.id,
-    conversationId: conversation.id,
-    userId: user.id,
-    locale: user.locale,
-    // Hosts come from the person's credentials, how commands run from the colleague's profile
-    // (R-MOD-2, R-OPS-3).
-    policy: { mode: target.profile.mode },
-    signal,
-    onApprovalNeeded: (request) => {
-      // The person's open pages mark the conversation as waiting now, not when the answer ends:
-      // the colleague may wait minutes for the decision, and the tab may have been left.
-      conversationChanged(user.id, colleague.id, conversation.id);
-      notifyApprovalNeeded(deps, {
-        conversationId: conversation.id,
+  // The office colleague only reads the wiki, whatever its profile allows (R-ADM-8).
+  const readOnly = colleague.officeWide;
+  const opsTools = readOnly
+    ? []
+    : await createOpsTools({
+        deps,
+        officeId: office.id,
         colleagueId: colleague.id,
-        requestedForUserId: user.id,
-        ...request,
-      }).catch((error: unknown) => console.error("Approval notification failed", error));
-    },
-    // Job updates arrive while a tool waits: send them right away, the stream is open.
-    onJob: (job) => {
-      if (!opsJobIds.has(job.id)) {
-        opsJobIds.add(job.id);
-        closeText();
-        parts.push({ type: "job", jobId: job.id });
-      }
-      void send({ type: "ops_job", job });
-    },
-  });
+        conversationId: conversation.id,
+        userId: user.id,
+        locale: user.locale,
+        // Hosts come from the person's credentials, how commands run from the colleague's profile
+        // (R-MOD-2, R-OPS-3).
+        policy: { mode: target.profile.mode },
+        signal,
+        onApprovalNeeded: (request) => {
+          // The person's open pages mark the conversation as waiting now, not when the answer ends:
+          // the colleague may wait minutes for the decision, and the tab may have been left.
+          conversationChanged(user.id, colleague.id, conversation.id);
+          notifyApprovalNeeded(deps, {
+            conversationId: conversation.id,
+            colleagueId: colleague.id,
+            requestedForUserId: user.id,
+            ...request,
+          }).catch((error: unknown) => console.error("Approval notification failed", error));
+        },
+        // Job updates arrive while a tool waits: send them right away, the stream is open.
+        onJob: (job) => {
+          if (!opsJobIds.has(job.id)) {
+            opsJobIds.add(job.id);
+            closeText();
+            parts.push({ type: "job", jobId: job.id });
+          }
+          void send({ type: "ops_job", job });
+        },
+      });
 
-  const operations = await opsInstructions(
-    deps,
-    user.id,
-    user.locale,
-    target.profile.mode,
-    opsTools.length > 0,
-  );
+  const operations = readOnly
+    ? null
+    : await opsInstructions(deps, user.id, user.locale, target.profile.mode, opsTools.length > 0);
   const system = [
     buildColleagueSystemPrompt({
       companyName: (await getSetupStatus(db)).companyName,
@@ -321,7 +321,9 @@ async function answer(deps: Deps, input: TurnInput) {
   let status: MessageStatus = "complete";
   let errorCode: ErrorCode | null = null;
 
-  const tools = [...wikiTools, createNotesTool(db, colleague.id), ...opsTools];
+  const tools = readOnly
+    ? wikiTools.filter((tool) => tool.name === "wiki_search" || tool.name === "wiki_read")
+    : [...wikiTools, createNotesTool(db, colleague.id), ...opsTools];
   const { model, maxOutputTokens, contextWindow } = target.profile;
   let compacted = false;
 
