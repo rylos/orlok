@@ -68,10 +68,11 @@ export const PASSWORD_RESET_TTL_HOURS = 24;
 
 export type PasswordResetInput = z.input<typeof passwordResetSchema>;
 
-// Like an invitation, the link is returned so it can be shared when the email did not leave.
+// The link is returned only when the email did not leave, so it can be shared by hand; unlike an
+// invitation's, it is never shown once the email has left (R-AUTH-7).
 export type PasswordResetResult = {
   person: { id: string; email: string; displayName: string };
-  resetUrl: string;
+  resetUrl: string | null;
   expiresAt: string;
   email: InvitationEmailStatus;
 };

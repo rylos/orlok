@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 // Outcome of an email carrying a link (invitation, password reset): whether the email left and
-// the link to share otherwise.
+// the link to share otherwise. Without a url (a reset whose email left) only the hint is shown.
 export function LinkResultCard({
   id,
   email,
@@ -21,7 +21,7 @@ export function LinkResultCard({
   id: string;
   email: InvitationEmailStatus;
   title: string;
-  url: string;
+  url: string | null;
   linkLabel: string;
   linkHint: string;
   onClose: () => void;
@@ -33,6 +33,9 @@ export function LinkResultCard({
   const [showLink, setShowLink] = useState(!email.sent);
 
   async function copy() {
+    if (!url) {
+      return;
+    }
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
@@ -68,7 +71,9 @@ export function LinkResultCard({
         </p>
       )}
 
-      {showLink ? (
+      {!url ? (
+        <p className="text-xs text-muted-foreground">{linkHint}</p>
+      ) : showLink ? (
         <>
           <div className="flex flex-wrap gap-2 sm:flex-nowrap">
             <label htmlFor={id} className="sr-only">

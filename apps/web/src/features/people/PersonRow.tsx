@@ -208,7 +208,7 @@ export function PersonRow({ person, offices, profiles, isSelf }: PersonRowProps)
         <div className="w-full">
           {resetResult ? (
             <LinkResultCard
-              key={resetResult.resetUrl}
+              key={resetResult.expiresAt}
               id={`person-${person.id}-reset-link`}
               email={resetResult.email}
               title={
@@ -218,7 +218,9 @@ export function PersonRow({ person, offices, profiles, isSelf }: PersonRowProps)
               }
               url={resetResult.resetUrl}
               linkLabel={t("people.resetLink")}
-              linkHint={t("people.resetLinkHint")}
+              linkHint={
+                resetResult.resetUrl ? t("people.resetLinkHint") : t("people.resetSentHint")
+              }
               onClose={() => setResetResult(null)}
             />
           ) : (

@@ -538,6 +538,8 @@ export const en = {
     resetLink: "Password reset link",
     resetLinkHint:
       "Anyone with this link can choose the password: share it only with the person. It works once, for 24 hours.",
+    resetSentHint:
+      "The link is only in the email, valid once for 24 hours. If it does not arrive, reset again for a new one.",
   },
   email: {
     title: "Email",

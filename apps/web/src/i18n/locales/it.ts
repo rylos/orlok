@@ -541,6 +541,8 @@ export const it: Translation = {
     resetLink: "Link per la nuova password",
     resetLinkHint:
       "Chi ha questo link può scegliere la password: passalo solo alla persona. Vale una volta sola, per 24 ore.",
+    resetSentHint:
+      "Il link è solo nell'email e vale una volta sola, per 24 ore. Se non arriva, reimposta di nuovo per crearne un altro.",
   },
   email: {
     title: "Email",

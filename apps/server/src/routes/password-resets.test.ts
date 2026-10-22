@@ -40,7 +40,11 @@ async function call<T>(path: string, method = "GET", body?: unknown, cookie?: st
 }
 
 function tokenOf(result: PasswordResetResult) {
-  return result.resetUrl.split("/").at(-1) ?? "";
+  return result.resetUrl?.split("/").at(-1) ?? "";
+}
+
+function tokenInEmail(message: MailMessage | undefined) {
+  return message?.text.match(/\/reset-password\/([\w-]+)/)?.[1] ?? "";
 }
 
 async function login(email: string, password: string) {
@@ -65,7 +69,7 @@ describe("password reset links", () => {
     expect(created.body.email).toEqual({ sent: false, reason: "not_configured", message: null });
     expect(created.body.resetUrl).toMatch(/^http:\/\/orlok\.test\/reset-password\/[\w-]{20,}$/);
     expect(created.body.person.email).toBe("member@example.com");
-    // Their sessions ended with the link: the old password is no use from now on.
+    // Their sessions ended with the link; the old password works until the link is used.
     expect((await call("/me", "GET", undefined, member.cookie)).res.status).toBe(401);
 
     const token = tokenOf(created.body);
@@ -113,13 +117,15 @@ describe("password reset links", () => {
       adminCookie,
     );
     expect(created.body.email).toEqual({ sent: true });
+    // The email left, so the administrator never gets the link to choose the password themselves.
+    expect(created.body.resetUrl).toBeNull();
     expect(sent[0]?.to).toBe("member@example.com");
     expect(sent[0]?.subject).toBe("Nuova password per Test Company su Orlok");
-    expect(sent[0]?.text).toContain(created.body.resetUrl);
+    expect(sent[0]?.text).toMatch(/http:\/\/orlok\.test\/reset-password\/[\w-]{20,}/);
     expect(sent[0]?.text).toContain("Administrator");
 
     // Once the link is used, a notice confirms the change, without any link.
-    await call(`/password-resets/${tokenOf(created.body)}`, "POST", {
+    await call(`/password-resets/${tokenInEmail(sent[0])}`, "POST", {
       password: "a-brand-new-password",
     });
     expect(sent).toHaveLength(2);

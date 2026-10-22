@@ -21,8 +21,8 @@ export function passwordResetUrl(publicUrl: string, token: string) {
   return `${publicUrl}/reset-password/${token}`;
 }
 
-// A new link replaces any previous one and ends the person's sessions, so the old password stops
-// mattering at once. An administrator resetting their own keeps the session they are using.
+// A new link replaces any previous one and ends the person's sessions at once; the old password
+// works until the link is used. An administrator resetting their own keeps the session in use.
 export async function createPasswordReset(
   deps: Deps,
   params: {
@@ -61,19 +61,22 @@ export async function createPasswordReset(
   });
 
   const resetUrl = passwordResetUrl(config.publicUrl, token);
+  const email = await deliverLinkEmail(deps, person.email, (companyName) =>
+    passwordResetEmail({
+      locale: person.locale,
+      companyName,
+      adminName: admin.displayName,
+      resetUrl,
+      hours: PASSWORD_RESET_TTL_HOURS,
+    }),
+  );
   return {
     person: { id: person.id, email: person.email, displayName: person.displayName },
-    resetUrl,
+    // Whoever holds the link chooses the password and acts as the person, with their credentials:
+    // the administrator gets it only when the email did not leave and there is no other way.
+    resetUrl: email.sent ? null : resetUrl,
     expiresAt: expiresAt.toISOString(),
-    email: await deliverLinkEmail(deps, person.email, (companyName) =>
-      passwordResetEmail({
-        locale: person.locale,
-        companyName,
-        adminName: admin.displayName,
-        resetUrl,
-        hours: PASSWORD_RESET_TTL_HOURS,
-      }),
-    ),
+    email,
   };
 }
 
