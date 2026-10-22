@@ -8,6 +8,7 @@ import {
   Plus,
   Settings2,
   TriangleAlert,
+  UsersRound,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link, NavLink } from "react-router";
@@ -17,7 +18,7 @@ import { translateError } from "@/i18n/errors";
 import { useMyProfiles } from "@/lib/colleague-queries";
 import { useMe } from "@/lib/queries";
 import { cn } from "@/lib/utils";
-import { useWorkspaceOffices } from "@/lib/workspace-queries";
+import { colleagueSettingsPath, useWorkspaceOffices } from "@/lib/workspace-queries";
 
 function navItemClasses({ isActive }: { isActive: boolean }) {
   return cn(
@@ -30,46 +31,75 @@ function navItemClasses({ isActive }: { isActive: boolean }) {
 
 // The colleague's own settings sit on its row, one tap away; the chat keeps what concerns the
 // conversation. The button lies over the row, since a link cannot hold another.
-function ColleagueLink({ colleague }: { colleague: WorkspaceColleague }) {
+function ColleagueLink({
+  colleague,
+  officeId,
+  isAdmin,
+}: {
+  colleague: WorkspaceColleague;
+  officeId: string;
+  isAdmin: boolean;
+}) {
   const { t } = useTranslation();
+  const settings = colleagueSettingsPath(colleague, officeId, isAdmin);
+  const Icon = colleague.officeWide ? UsersRound : Bot;
   return (
     <div className="relative">
       <NavLink
         to={`/colleagues/${colleague.id}`}
-        className={(state) => cn(navItemClasses(state), "pr-9")}
+        className={(state) => cn(navItemClasses(state), settings && "pr-9")}
+        title={colleague.officeWide ? t("colleagues.officeWideHint") : undefined}
       >
-        <Bot className="size-4 shrink-0 text-primary" aria-hidden />
+        <Icon className="size-4 shrink-0 text-primary" aria-hidden />
         <span className="min-w-0 flex-1">
-          <span className="block truncate">{colleague.name}</span>
+          <span className="block truncate">
+            {colleague.name}
+            {colleague.officeWide ? (
+              <span className="sr-only"> · {t("colleagues.officeWide")}</span>
+            ) : null}
+          </span>
           {colleague.title ? (
             <span className="block truncate text-xs text-muted-foreground">{colleague.title}</span>
           ) : null}
         </span>
-        {colleague.needsProfile ? (
+        {/* Only those who can choose its profile are told it needs one. */}
+        {colleague.needsProfile && settings ? (
           <TriangleAlert
             className="size-4 shrink-0 text-warning"
             aria-label={t("colleagues.needsProfileShort")}
           />
         ) : null}
       </NavLink>
-      <Link
-        to={`/colleagues/${colleague.id}/_settings`}
-        className={cn(
-          buttonClasses("ghost", "icon"),
-          "absolute top-1/2 right-1 size-7 -translate-y-1/2 text-muted-foreground",
-        )}
-        aria-label={t("colleagues.settingsOf", { name: colleague.name })}
-        title={t("colleagues.settings")}
-      >
-        <Settings2 aria-hidden />
-      </Link>
+      {settings ? (
+        <Link
+          to={settings}
+          className={cn(
+            buttonClasses("ghost", "icon"),
+            "absolute top-1/2 right-1 size-7 -translate-y-1/2 text-muted-foreground",
+          )}
+          aria-label={t("colleagues.settingsOf", { name: colleague.name })}
+          title={t("colleagues.settings")}
+        >
+          <Settings2 aria-hidden />
+        </Link>
+      ) : null}
     </div>
   );
 }
 
+const ownColleagues = (colleagues: WorkspaceColleague[]) =>
+  colleagues.filter((colleague) => !colleague.officeWide);
+
+// The office colleague leads the list: it is the same for everyone in the office.
+const officeFirst = (colleagues: WorkspaceColleague[]) => [
+  ...colleagues.filter((colleague) => colleague.officeWide),
+  ...ownColleagues(colleagues),
+];
+
 export function OfficeNav() {
   const { t } = useTranslation();
   const { data: me } = useMe();
+  const isAdmin = me?.role === "admin";
   const offices = useWorkspaceOffices();
   // Without a profile no colleague can be created: say who can grant one instead of offering it.
   const profiles = useMyProfiles();
@@ -136,11 +166,11 @@ export function OfficeNav() {
                 <span className="truncate">{t("wiki.title")}</span>
               </NavLink>
             </li>
-            {office.colleagues.length === 0 && noProfiles ? (
+            {ownColleagues(office.colleagues).length === 0 && noProfiles ? (
               <li className="px-2 py-1 text-xs text-muted-foreground">
                 {me?.role === "admin" ? t("workspace.noProfilesAdmin") : t("workspace.noProfiles")}
               </li>
-            ) : office.colleagues.length === 0 ? (
+            ) : ownColleagues(office.colleagues).length === 0 ? (
               <li>
                 <Link
                   to={`/offices/${office.id}/colleagues/new`}
@@ -150,9 +180,9 @@ export function OfficeNav() {
                 </Link>
               </li>
             ) : null}
-            {office.colleagues.map((colleague) => (
+            {officeFirst(office.colleagues).map((colleague) => (
               <li key={colleague.id}>
-                <ColleagueLink colleague={colleague} />
+                <ColleagueLink colleague={colleague} officeId={office.id} isAdmin={isAdmin} />
               </li>
             ))}
           </ul>
@@ -165,7 +195,7 @@ export function OfficeNav() {
               <ul className="mt-0.5 space-y-0.5">
                 {office.archived.map((colleague) => (
                   <li key={colleague.id}>
-                    <ColleagueLink colleague={colleague} />
+                    <ColleagueLink colleague={colleague} officeId={office.id} isAdmin={isAdmin} />
                   </li>
                 ))}
               </ul>

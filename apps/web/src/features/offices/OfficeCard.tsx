@@ -8,9 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { translateError } from "@/i18n/errors";
 import { useClearWiki, useDeleteOffice } from "@/lib/admin-queries";
+import { OfficeColleagueSection } from "./OfficeColleagueSection";
 import { OfficeForm } from "./OfficeForm";
 
-// An office, its wiki and nothing of its people's colleagues, which are theirs alone (R-ADM-3).
+// An office, its wiki and its office colleague (R-ADM-8); nothing of its people's own colleagues,
+// which are theirs alone (R-ADM-3).
 export function OfficeCard({ office }: { office: AdminOffice }) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
@@ -19,7 +21,8 @@ export function OfficeCard({ office }: { office: AdminOffice }) {
   const error = removeOffice.error ?? clearWiki.error;
 
   return (
-    <Card className="space-y-4 p-4">
+    // Anchored, so a notice about its colleague can open the page on this office.
+    <Card id={`office-${office.id}`} className="scroll-mt-4 space-y-4 p-4">
       {editing ? (
         <OfficeForm office={office} onDone={() => setEditing(false)} />
       ) : (
@@ -79,6 +82,7 @@ export function OfficeCard({ office }: { office: AdminOffice }) {
       )}
 
       {error ? <ErrorAlert>{translateError(t, error)}</ErrorAlert> : null}
+      {editing ? null : <OfficeColleagueSection office={office} />}
       {clearWiki.data ? (
         <p role="status" className="rounded-md border bg-muted/40 px-3 py-2 text-sm">
           {t("offices.wiki.cleared", {

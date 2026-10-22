@@ -68,7 +68,7 @@ function useHelper(officeId: string) {
   const offices = useWorkspaceOffices();
   const colleagues = (
     offices.data?.find((office) => office.id === officeId)?.colleagues ?? []
-  ).filter((colleague) => !colleague.needsProfile);
+  ).filter((colleague) => !colleague.needsProfile && !colleague.officeWide);
   const key = `orlok-wiki-helper:${officeId}`;
   const [chosen, setChosen] = useState(() => {
     try {

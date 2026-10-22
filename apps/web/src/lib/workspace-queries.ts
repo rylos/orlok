@@ -3,6 +3,7 @@ import type {
   ConversationListItem,
   ConversationSummary,
   WikiSource,
+  WorkspaceColleague,
   WorkspaceOffice,
 } from "@orlok/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -70,6 +71,19 @@ export function useDeleteConversation(colleagueId: string) {
 }
 
 // One of the person's own colleagues, archived ones included: their conversations stay readable.
+// Where a colleague is set up: its own settings, or for the office colleague the office in
+// Admin → Offices, which only administrators open (R-ADM-8).
+export function colleagueSettingsPath(
+  colleague: Pick<WorkspaceColleague, "id" | "officeWide">,
+  officeId: string,
+  isAdmin: boolean,
+) {
+  if (!colleague.officeWide) {
+    return `/colleagues/${colleague.id}/_settings`;
+  }
+  return isAdmin ? `/admin/offices#office-${officeId}` : null;
+}
+
 export function findColleague(offices: WorkspaceOffice[] | undefined, colleagueId: string) {
   for (const office of offices ?? []) {
     const active = office.colleagues.find((item) => item.id === colleagueId);

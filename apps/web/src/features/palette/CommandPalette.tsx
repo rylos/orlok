@@ -6,7 +6,11 @@ import { type NavigateOptions, useMatch, useNavigate } from "react-router";
 import { useChooseLocale, useChooseTheme, useMe } from "@/lib/queries";
 import { cn } from "@/lib/utils";
 import { useWikiOverview, useWikiSearch } from "@/lib/wiki-queries";
-import { useConversations, useWorkspaceOffices } from "@/lib/workspace-queries";
+import {
+  colleagueSettingsPath,
+  useConversations,
+  useWorkspaceOffices,
+} from "@/lib/workspace-queries";
 
 // The palette opens from anywhere with Ctrl+K (⌘K on a Mac) or from the search button in the
 // header, which sends this event. AltGr is Ctrl+Alt on Windows, so a combination with Alt is
@@ -172,20 +176,25 @@ function PaletteBody({ onDone }: { onDone: (run: () => void) => void }) {
 
   // Actions: first those of the colleague and the office in view.
   if (colleague) {
-    items.push(
-      {
-        id: "new-conversation",
-        group: "actions",
-        label: t("palette.newConversationWith", { name: colleague.name }),
-        run: go(`/colleagues/${colleague.id}`, { state: { fresh: true } }),
-      },
-      {
+    items.push({
+      id: "new-conversation",
+      group: "actions",
+      label: t("palette.newConversationWith", { name: colleague.name }),
+      run: go(`/colleagues/${colleague.id}`, { state: { fresh: true } }),
+    });
+    const settings = colleagueSettingsPath(
+      colleague,
+      colleagueOffice?.id ?? "",
+      me?.role === "admin",
+    );
+    if (settings) {
+      items.push({
         id: "colleague-settings",
         group: "actions",
         label: t("colleagues.settingsOf", { name: colleague.name }),
-        run: go(`/colleagues/${colleague.id}/_settings`),
-      },
-    );
+        run: go(settings),
+      });
+    }
   }
   if (office) {
     const base = `/offices/${office.id}/wiki`;

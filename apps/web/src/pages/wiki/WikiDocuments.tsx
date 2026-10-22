@@ -195,10 +195,11 @@ export function WikiDocuments() {
   const [files, setFiles] = useState<File[]>([]);
   const [result, setResult] = useState<WikiSourceUploadResult | null>(null);
 
-  // The person's own colleagues in the office, with a profile they still hold (R-ADM-3).
+  // The person's own colleagues in the office, with a profile they still hold (R-ADM-3); never the
+  // office colleague, which only reads the wiki (R-ADM-8).
   const colleagues = (
     offices.data?.find((office) => office.id === officeId)?.colleagues ?? []
-  ).filter((colleague) => !colleague.needsProfile);
+  ).filter((colleague) => !colleague.needsProfile && !colleague.officeWide);
   const selectedColleague = colleagueId || colleagues[0]?.id || "";
   const totalSize = files.reduce((total, file) => total + file.size, 0);
 

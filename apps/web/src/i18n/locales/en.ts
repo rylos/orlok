@@ -393,6 +393,7 @@ export const en = {
     notFound: "This virtual colleague is not available.",
     archived: "{{name}} is archived: restore it to continue.",
     needsProfile: "{{name}} needs another profile before it can answer.",
+    unavailable: "{{name}} is not available at the moment.",
     chooseProfile: "Choose a profile",
   },
   colleagues: {
@@ -425,6 +426,13 @@ export const en = {
     archived: "Archived ({{count}})",
     ref: "{{name}} · {{owner}}",
     refDeleted: "{{name}} (deleted)",
+    officeWide: "Office colleague",
+    officeWideOf: "Office colleague of {{office}}",
+    officeWideHint:
+      "Everyone in the office has it, each in their own private conversations. It answers by reading the wiki and an administrator manages it.",
+    officeWideSettings:
+      "This is the office colleague: everyone in the office has it and an administrator sets it up. Your conversations with it stay private.",
+    officeWideManage: "Manage it in Offices",
     keep: {
       title: "Archive or delete",
       description:
@@ -462,6 +470,23 @@ export const en = {
       clearMismatch: "The name does not match: the wiki was not touched.",
       cleared: "Wiki emptied: {{pages}} pages and {{sources}} documents deleted.",
       importAgain: "Import again",
+    },
+    colleague: {
+      title: "Office colleague",
+      description:
+        "A colleague everyone in the office finds in their own list, each with private conversations. It only answers by reading the wiki: it does not change it or run commands. It never makes things up: what concerns the company comes only from the wiki, with the pages cited, and general knowledge is stated as such.",
+      create: "Create the office colleague",
+      defaultName: "Guide",
+      titleHint:
+        "Optional: how it introduces itself, for example “Answers about the office's procedures”.",
+      profileHint:
+        "The model that answers, among all profiles. Whatever the profile's mode, this colleague only reads the wiki.",
+      instructionsHint:
+        "Optional: they add to its fixed rules (never make things up, cite the pages, say when something is not in the wiki), which cannot be removed.",
+      needsProfile: "Its profile was deleted: it answers nobody until you choose another one.",
+      archived: "Archived: nobody sees it and it does not answer. The conversations are kept.",
+      deleteConfirm:
+        "Delete “{{name}}”? Everyone's conversations with it in the office are deleted. This cannot be undone.",
     },
   },
   people: {

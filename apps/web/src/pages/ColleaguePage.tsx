@@ -10,6 +10,7 @@ import { ColleagueForm } from "@/features/colleagues/ColleagueForm";
 import { translateError } from "@/i18n/errors";
 import { HeaderActions } from "@/layouts/HeaderActions";
 import { useArchiveColleague, useColleague, useDeleteColleague } from "@/lib/colleague-queries";
+import { useMe } from "@/lib/queries";
 import { useWorkspaceOffices } from "@/lib/workspace-queries";
 
 function PageHeader({ title, back }: { title: string; back: string }) {
@@ -97,6 +98,7 @@ function KeepOrRemove({ colleague }: { colleague: Colleague }) {
 function EditColleague({ colleagueId }: { colleagueId: string }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const isAdmin = useMe().data?.role === "admin";
   const colleague = useColleague(colleagueId);
   const back = `/colleagues/${colleagueId}`;
 
@@ -112,6 +114,19 @@ function EditColleague({ colleagueId }: { colleagueId: string }) {
             />
           ) : colleague.isError ? (
             <ErrorAlert>{translateError(t, colleague.error)}</ErrorAlert>
+          ) : colleague.data.officeWide ? (
+            // The office colleague is set up by administrators in Admin → Offices (R-ADM-8).
+            <Card className="space-y-3 p-4 text-sm">
+              <p>{t("colleagues.officeWideSettings")}</p>
+              {isAdmin ? (
+                <Link
+                  to={`/admin/offices#office-${colleague.data.officeId}`}
+                  className={buttonClasses("outline", "sm")}
+                >
+                  {t("colleagues.officeWideManage")}
+                </Link>
+              ) : null}
+            </Card>
           ) : (
             <>
               {colleague.data.needsProfile ? (

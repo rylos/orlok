@@ -9,6 +9,8 @@ import type {
   InvitationResult,
   ModelProfile,
   ModelProvider,
+  OfficeColleagueCreateInput,
+  OfficeColleagueUpdateInput,
   OfficeCreateInput,
   OfficeUpdateInput,
   PasswordResetResult,
@@ -27,6 +29,7 @@ import type {
 } from "@orlok/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "./api";
+import { colleagueKeys } from "./colleague-queries";
 import { wikiKeys } from "./wiki-queries";
 import { workspaceKeys } from "./workspace-queries";
 
@@ -153,6 +156,40 @@ export function useDeleteOffice() {
   const invalidate = useInvalidateOffices();
   return useMutation({
     mutationFn: (id: string) => apiFetch<void>(`/admin/offices/${id}`, { method: "DELETE" }),
+    onSuccess: invalidate,
+  });
+}
+
+// The office colleague (R-ADM-8): everyone in the office sees it, so the workspace and the
+// colleague's own page follow every change.
+function useInvalidateOfficeColleague() {
+  const invalidate = useInvalidateOffices();
+  const queryClient = useQueryClient();
+  return () =>
+    Promise.all([invalidate(), queryClient.invalidateQueries({ queryKey: colleagueKeys.all })]);
+}
+
+type SaveOfficeColleague =
+  | { officeId: string; create: true; input: OfficeColleagueCreateInput }
+  | { officeId: string; create?: false; input: OfficeColleagueUpdateInput };
+
+export function useSaveOfficeColleague() {
+  const invalidate = useInvalidateOfficeColleague();
+  return useMutation({
+    mutationFn: ({ officeId, create, input }: SaveOfficeColleague) =>
+      apiFetch(`/admin/offices/${officeId}/colleague`, {
+        method: create ? "POST" : "PATCH",
+        body: input,
+      }),
+    onSuccess: invalidate,
+  });
+}
+
+export function useDeleteOfficeColleague() {
+  const invalidate = useInvalidateOfficeColleague();
+  return useMutation({
+    mutationFn: (officeId: string) =>
+      apiFetch<void>(`/admin/offices/${officeId}/colleague`, { method: "DELETE" }),
     onSuccess: invalidate,
   });
 }

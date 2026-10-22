@@ -66,6 +66,7 @@ const TEXT = {
     gone: "That conversation no longer exists.",
     untitled: "Untitled",
     needsProfile: "This colleague has no model profile it may use: choose one in Orlok.",
+    unavailable: "This colleague is not available at the moment.",
     failed: "The colleague could not answer. Open Orlok for details.",
     approved: "Approved.",
     approvedAlways: (types: string[]) =>
@@ -100,6 +101,7 @@ const TEXT = {
     gone: "Quella conversazione non esiste più.",
     untitled: "Senza titolo",
     needsProfile: "Questo collega non ha un profilo di modello utilizzabile: sceglilo in Orlok.",
+    unavailable: "Questo collega non è disponibile al momento.",
     failed: "Il collega non è riuscito a rispondere. Apri Orlok per i dettagli.",
     approved: "Approvato.",
     approvedAlways: (types: string[]) =>
@@ -238,7 +240,8 @@ async function handleMessage(deps: TelegramDeps, api: TelegramApi, message: Tele
   }
   const target = await resolveColleagueModel(db, colleague);
   if (!target?.provider.enabled) {
-    await api.sendMessage(chatId, t.needsProfile);
+    // The office colleague's profile is chosen by an administrator, not by the person (R-ADM-8).
+    await api.sendMessage(chatId, colleague.officeWide ? t.unavailable : t.needsProfile);
     return;
   }
 

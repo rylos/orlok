@@ -28,6 +28,7 @@ import {
   Square,
   Trash2,
   TriangleAlert,
+  UsersRound,
   X,
 } from "lucide-react";
 import { type KeyboardEvent, useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -44,8 +45,10 @@ import { ApiRequestError, apiFetch, apiUpload, followApi, streamApi } from "@/li
 import { useArchiveColleague } from "@/lib/colleague-queries";
 import { setStreamingConversation } from "@/lib/live-events";
 import { isJobUnderway, opsKeys, useConversationJobs } from "@/lib/ops-queries";
+import { useMe } from "@/lib/queries";
 import { cn, localId } from "@/lib/utils";
 import {
+  colleagueSettingsPath,
   useConversation,
   useConversations,
   useDeleteConversation,
@@ -244,6 +247,9 @@ export function ChatView({ office, colleague, archived, conversationId }: ChatVi
   const location = useLocation();
   const queryClient = useQueryClient();
   const conversations = useConversations(colleague.id);
+  const { data: me } = useMe();
+  // Who may give the colleague a profile is told it needs one; the others that it is unavailable.
+  const settingsPath = colleagueSettingsPath(colleague, office.id, me?.role === "admin");
   // The conversation whose title is being edited, from its menu.
   const [renaming, setRenaming] = useState<string | null>(null);
   const waitingCount = (conversations.data ?? []).filter((item) => item.waiting).length;
@@ -927,13 +933,27 @@ export function ChatView({ office, colleague, archived, conversationId }: ChatVi
           >
             <ArrowLeft aria-hidden />
           </Link>
-          <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary/15 text-primary">
-            <Bot className="size-5" aria-hidden />
+          <span
+            className="grid size-9 shrink-0 place-items-center rounded-full bg-primary/15 text-primary"
+            title={colleague.officeWide ? t("colleagues.officeWideHint") : undefined}
+          >
+            {colleague.officeWide ? (
+              <UsersRound className="size-5" aria-hidden />
+            ) : (
+              <Bot className="size-5" aria-hidden />
+            )}
           </span>
           <div className="min-w-0">
             <h1 className="truncate font-semibold">{colleague.name}</h1>
             <p className="truncate text-sm text-muted-foreground">
-              {[colleague.title, office.name].filter(Boolean).join(" · ")}
+              {[
+                colleague.title,
+                colleague.officeWide
+                  ? t("colleagues.officeWideOf", { office: office.name })
+                  : office.name,
+              ]
+                .filter(Boolean)
+                .join(" · ")}
             </p>
           </div>
         </div>
@@ -1103,7 +1123,12 @@ export function ChatView({ office, colleague, archived, conversationId }: ChatVi
                 kind: item.kind,
                 url: `/api/attachments/${item.id}`,
               }))}
-              saveTarget={conversationId ? { conversationId, messageId: message.id } : null}
+              // The office colleague only reads the wiki: nothing of its answers is filed (R-ADM-8).
+              saveTarget={
+                conversationId && !colleague.officeWide
+                  ? { conversationId, messageId: message.id }
+                  : null
+              }
             />
           ))}
 
@@ -1169,7 +1194,9 @@ export function ChatView({ office, colleague, archived, conversationId }: ChatVi
               <TriangleAlert className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden />
               {archived
                 ? t("chat.archived", { name: colleague.name })
-                : t("chat.needsProfile", { name: colleague.name })}
+                : settingsPath
+                  ? t("chat.needsProfile", { name: colleague.name })
+                  : t("chat.unavailable", { name: colleague.name })}
             </span>
             {archived ? (
               <Button
@@ -1180,14 +1207,11 @@ export function ChatView({ office, colleague, archived, conversationId }: ChatVi
               >
                 {t("colleagues.keep.restore")}
               </Button>
-            ) : (
-              <Link
-                to={`/colleagues/${colleague.id}/_settings`}
-                className={buttonClasses("outline", "sm")}
-              >
+            ) : settingsPath ? (
+              <Link to={settingsPath} className={buttonClasses("outline", "sm")}>
                 {t("chat.chooseProfile")}
               </Link>
-            )}
+            ) : null}
           </div>
           {restore.isError ? (
             <div className={cn("mt-2", layoutClass)}>

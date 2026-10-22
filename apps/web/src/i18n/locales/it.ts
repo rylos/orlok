@@ -394,6 +394,7 @@ export const it: Translation = {
     notFound: "Questo collega virtuale non è disponibile.",
     archived: "{{name}} è archiviato: ripristinalo per continuare.",
     needsProfile: "{{name}} ha bisogno di un altro profilo per rispondere.",
+    unavailable: "{{name}} non è disponibile al momento.",
     chooseProfile: "Scegli un profilo",
   },
   colleagues: {
@@ -427,6 +428,13 @@ export const it: Translation = {
     archived: "Archiviati ({{count}})",
     ref: "{{name}} · {{owner}}",
     refDeleted: "{{name}} (eliminato)",
+    officeWide: "Collega dell'ufficio",
+    officeWideOf: "Collega dell'ufficio {{office}}",
+    officeWideHint:
+      "Lo hanno tutte le persone dell'ufficio, ognuna con le proprie conversazioni private. Risponde leggendo la wiki e lo gestisce un amministratore.",
+    officeWideSettings:
+      "È il collega dell'ufficio: lo hanno tutte le persone dell'ufficio e lo imposta un amministratore. Le tue conversazioni con lui restano private.",
+    officeWideManage: "Gestiscilo in Uffici",
     keep: {
       title: "Archivia o elimina",
       description:
@@ -464,6 +472,24 @@ export const it: Translation = {
       clearMismatch: "Il nome non corrisponde: la wiki non è stata toccata.",
       cleared: "Wiki svuotata: {{pages}} pagine e {{sources}} documenti eliminati.",
       importAgain: "Importa di nuovo",
+    },
+    colleague: {
+      title: "Collega dell'ufficio",
+      description:
+        "Un collega che tutte le persone dell'ufficio trovano nel proprio elenco, ognuna con conversazioni private. Risponde solo leggendo la wiki: non la modifica e non esegue comandi. Non inventa: ciò che riguarda l'azienda lo prende solo dalla wiki, citando le pagine, e la conoscenza generale la dichiara come tale.",
+      create: "Crea collega dell'ufficio",
+      defaultName: "Guida",
+      titleHint:
+        "Facoltativo: come si presenta, per esempio «Risponde sulle procedure dell'ufficio».",
+      profileHint:
+        "Il modello che risponde, tra tutti i profili. Qualunque modalità abbia il profilo, questo collega legge soltanto la wiki.",
+      instructionsHint:
+        "Facoltative: si aggiungono alle sue regole fisse (non inventare, citare le pagine, dire quando qualcosa non è in wiki), che non si possono togliere.",
+      needsProfile:
+        "Il suo profilo è stato eliminato: non risponde a nessuno finché non gliene scegli un altro.",
+      archived: "Archiviato: nessuno lo vede e non risponde. Le conversazioni restano.",
+      deleteConfirm:
+        "Eliminare “{{name}}”? Si cancellano le conversazioni di tutte le persone dell'ufficio con lui. Non si può annullare.",
     },
   },
   people: {

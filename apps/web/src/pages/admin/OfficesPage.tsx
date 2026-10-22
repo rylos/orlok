@@ -1,7 +1,7 @@
 import { Loader2, Plus } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 import { ErrorAlert } from "@/components/ui/alert";
 import { Button, buttonClasses } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -10,12 +10,21 @@ import { OfficeForm } from "@/features/offices/OfficeForm";
 import { translateError } from "@/i18n/errors";
 import { useAdminOffices, useProfiles } from "@/lib/admin-queries";
 
-// Offices (R-ADM-2). Colleagues belong to each person, who creates them in their offices.
+// Offices (R-ADM-2) and their office colleagues (R-ADM-8). Everyone else's colleagues belong to
+// each person, who creates them in their offices.
 export function OfficesPage() {
   const { t } = useTranslation();
   const offices = useAdminOffices();
   const profiles = useProfiles();
   const [creating, setCreating] = useState(false);
+  // Opened on one office, from a notice about its colleague: shown once the list is there.
+  const { hash } = useLocation();
+  const loaded = offices.isSuccess;
+  useEffect(() => {
+    if (loaded && hash.startsWith("#office-")) {
+      document.getElementById(hash.slice(1))?.scrollIntoView({ block: "start" });
+    }
+  }, [loaded, hash]);
 
   return (
     <>
