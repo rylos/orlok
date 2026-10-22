@@ -148,6 +148,8 @@ export const it: Translation = {
     sessionEnded:
       "La sessione è terminata: l'accesso è stato chiuso da un altro dispositivo, è scaduto o è stato disattivato. Accedi di nuovo.",
     submit: "Accedi",
+    forgotPassword:
+      "Password dimenticata? Un amministratore può mandarti un link per sceglierne una nuova.",
   },
   setup: {
     title: "Configura Orlok",
@@ -528,6 +530,17 @@ export const it: Translation = {
     resend: "Invia di nuovo",
     revoke: "Revoca",
     revokeConfirm: "Revocare l'invito per {{email}}?",
+    resetPassword: "Reimposta password",
+    resetConfirm:
+      "Le sessioni di {{name}} su tutti i dispositivi verranno chiuse e arriverà un link per scegliere una nuova password. Nessuno, nemmeno tu, la conoscerà.",
+    resetConfirmSelf:
+      "Le tue sessioni sugli altri dispositivi verranno chiuse e riceverai un link per scegliere una nuova password. Questa sessione resta aperta.",
+    resetSend: "Reimposta e invia il link",
+    resetSent: "Link per la nuova password inviato a {{email}}",
+    resetNotSent: "Link per la nuova password creato per {{email}}, ma l'email non è partita",
+    resetLink: "Link per la nuova password",
+    resetLinkHint:
+      "Chi ha questo link può scegliere la password: passalo solo alla persona. Vale una volta sola, per 24 ore.",
   },
   email: {
     title: "Email",
@@ -569,6 +582,16 @@ export const it: Translation = {
     invalidDescription:
       "Questo link di invito non è valido, è già stato usato o è scaduto. Chiedine uno nuovo a un amministratore.",
     goToLogin: "Vai all'accesso",
+  },
+  resetPassword: {
+    title: "Scegli una nuova password",
+    description:
+      "{{name}}, un amministratore ha reimpostato la tua password. Scegline una nuova per accedere.",
+    newPassword: "Nuova password",
+    submit: "Salva e accedi",
+    invalidTitle: "Link non valido",
+    invalidDescription:
+      "Questo link non è valido, è già stato usato, è stato sostituito da uno più recente o è scaduto. Chiedine uno nuovo a un amministratore.",
   },
   profiles: {
     title: "Profili colleghi",
@@ -1523,6 +1546,8 @@ export const it: Translation = {
       profile_in_use:
         "Il profilo è concesso a una persona, usato per i documenti o per la ricerca nella wiki",
       invitation_invalid: "Questo invito non è valido, è già stato usato o è scaduto",
+      password_reset_invalid: "Questo link non è valido, è già stato usato, sostituito o è scaduto",
+      person_disabled: "Questa persona è disattivata: riattivala prima",
       last_admin: "Serve almeno un amministratore attivo",
       self_change_not_allowed: "Non puoi declassare o disattivare il tuo account",
       revision_conflict: "La pagina è stata modificata da qualcun altro nel frattempo",

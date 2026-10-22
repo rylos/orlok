@@ -1,13 +1,20 @@
 import type { ActiveSession, ApiError } from "@orlok/shared";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { createApp } from "../app";
+import type { MailerFactory, MailMessage } from "../mail";
 import { createTestDeps, resetDatabase } from "../test/db";
 import { jsonRequest, sessionCookieFrom, setupAdmin } from "../test/http";
 
 // Changing one's own password (R-AUTH-6).
 
 const deps = createTestDeps();
-const app = createApp(deps);
+const sent: MailMessage[] = [];
+const fakeMail: MailerFactory = () => ({
+  async send(message) {
+    sent.push(message);
+  },
+});
+const app = createApp({ ...deps, mail: fakeMail });
 
 afterAll(() => deps.close());
 
@@ -19,6 +26,7 @@ let adminCookie: string;
 
 beforeEach(async () => {
   await resetDatabase(deps.db);
+  sent.length = 0;
   adminCookie = await setupAdmin(app);
 });
 
@@ -67,5 +75,20 @@ describe("changing the password", () => {
     expect(
       (await app.request("/api/me/sessions", jsonRequest("GET", undefined, other))).status,
     ).toBe(401);
+  });
+
+  it("emails a notice of the change", async () => {
+    await app.request(
+      "/api/admin/smtp",
+      jsonRequest(
+        "PUT",
+        { host: "smtp.example.com", port: 587, security: "starttls", fromAddress: "o@example.com" },
+        adminCookie,
+      ),
+    );
+    expect((await change({ currentPassword: OLD, newPassword: NEW })).status).toBe(204);
+    expect(sent).toHaveLength(1);
+    expect(sent[0]?.to).toBe(EMAIL);
+    expect(sent[0]?.text).toContain("Account");
   });
 });

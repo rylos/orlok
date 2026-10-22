@@ -8,7 +8,8 @@ From the repo root:
 - `pnpm db:up` / `pnpm db:down` — Postgres 18 + pgvector (`compose.dev.yaml`, dev only)
 - `pnpm dev` — server (tsx watch, :3000) + Vite (:5173 on all interfaces, `strictPort`, proxies `/api` → :3000). Reachable from the LAN at the machine's address; set `ORLOK_PUBLIC_URL` in `.env` to it for invitation links
 - Dev runner: ignores `.env` and uses the built-in token `orlok-dev-runner-token`. A different `ORLOK_RUNNER_TOKEN` in `.env` makes every server→runner call fail with 401. On Windows `pnpm dev` stops at the runner (POSIX env syntax in its script), so start server and web separately (README). The runner started natively on Windows accepts jobs but fails them with `spawn /bin/sh ENOENT`; run it from its Docker image to try operations
-- `pnpm lint` (Biome check), `pnpm check` (Biome with fixes)
+- `pnpm lint` (Biome check), `pnpm check` (Biome with fixes). On a Windows checkout (`core.autocrlf=true`, files CRLF) both flag every file for line endings and `pnpm check` rewrites ~400 files to LF: run `pnpm exec biome check --write <changed files>` instead; to undo a repo-wide rewrite, `git checkout` the files `git status` lists as M but `git diff` does not
+- Reset a password from the server (R-AUTH-7): `pnpm --filter @orlok/server reset-password --email <x> [--database URL]`; in production `docker compose exec app orlok-reset-password --email <x>`. Never against the dev DB without asking (the user keeps real data there)
 - `pnpm typecheck`, `pnpm test`, `pnpm build`
 - Single package: `pnpm --filter @orlok/server <script>` (`@orlok/web`, `@orlok/shared`)
 - Migrations: after changing `apps/server/src/db/schema.ts` → `set -a && . ../../.env && set +a && pnpm db:generate` inside `apps/server`; migrations apply automatically at server start and in test setup. tsx watch does not restart on new migration files: touch `apps/server/src/index.ts`

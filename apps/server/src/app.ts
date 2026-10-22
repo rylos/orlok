@@ -12,6 +12,7 @@ import { credentialRoutes } from "./routes/credentials";
 import { publicInvitationRoutes } from "./routes/invitations";
 import { meRoutes } from "./routes/me";
 import { opsRoutes } from "./routes/ops";
+import { passwordResetRoutes } from "./routes/password-resets";
 import { setupRoutes } from "./routes/setup";
 import { wikiRoutes } from "./routes/wiki";
 import { workspaceRoutes } from "./routes/workspace";
@@ -33,6 +34,7 @@ export function createApp(deps: Deps) {
   app.route("/me", meRoutes(deps));
   app.route("/me", credentialRoutes(deps));
   app.route("/invitations", publicInvitationRoutes(deps));
+  app.route("/password-resets", passwordResetRoutes(deps));
   app.route("/workspace", workspaceRoutes(deps));
   app.route("/colleagues", colleagueRoutes(deps));
   app.route("/conversations", conversationRoutes(deps));

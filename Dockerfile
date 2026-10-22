@@ -37,12 +37,17 @@ COPY apps/server/src/embeddings-local/models.json src/embeddings-local/
 RUN node scripts/fetch-models.mjs
 
 FROM ${NODE_IMAGE}
+# orlok-reset-password: `docker compose exec app orlok-reset-password --email <address>` sets a
+# new password when no administrator can sign in (R-AUTH-7).
 RUN apt-get update \
   && apt-get install -y --no-install-recommends tini \
   && rm -rf /var/lib/apt/lists/* \
   && rm -rf /opt/yarn-* /usr/local/bin/yarn /usr/local/bin/yarnpkg \
   && groupadd -g 10001 orlok \
-  && useradd -u 10001 -g orlok -d /nonexistent -M -s /usr/sbin/nologin orlok
+  && useradd -u 10001 -g orlok -d /nonexistent -M -s /usr/sbin/nologin orlok \
+  && printf '#!/bin/sh\nexec node /app/apps/server/dist/reset-password.mjs "$@"\n' \
+    > /usr/local/bin/orlok-reset-password \
+  && chmod 755 /usr/local/bin/orlok-reset-password
 
 WORKDIR /app
 # Everything stays owned by root and read-only for the orlok user.

@@ -11,6 +11,7 @@ import type {
   ModelProvider,
   OfficeCreateInput,
   OfficeUpdateInput,
+  PasswordResetResult,
   PeopleOverview,
   Person,
   PersonUpdateInput,
@@ -219,6 +220,14 @@ export function useUpdatePerson() {
         queryClient.invalidateQueries({ queryKey: ["colleagues"] }),
         queryClient.invalidateQueries({ queryKey: workspaceKeys.offices }),
       ]),
+  });
+}
+
+// A one-time link for a person to choose a new password; their sessions end at once (R-AUTH-7).
+export function useResetPassword() {
+  return useMutation({
+    mutationFn: (id: string) =>
+      apiFetch<PasswordResetResult>(`/admin/people/${id}/password-reset`, { method: "POST" }),
   });
 }
 

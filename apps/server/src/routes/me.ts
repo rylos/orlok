@@ -31,6 +31,7 @@ import {
   setTypeDisabled,
 } from "../ops/approved-types";
 import { liveEvents } from "../services/live-events";
+import { notifyPasswordChanged } from "../services/password-resets";
 import { getVapidKeys } from "../services/push";
 import { createLinkToken, getTelegramBotName } from "../telegram/settings";
 import type { AppEnv, Deps } from "../types";
@@ -39,7 +40,8 @@ const sessionParamSchema = z.object({
   id: z.string().regex(/^[A-Za-z0-9_-]{16,128}$/, { error: "invalid_value" }),
 });
 
-export function meRoutes({ db, config }: Deps) {
+export function meRoutes(deps: Deps) {
+  const { db, config } = deps;
   async function telegramLink(userId: string): Promise<TelegramLink> {
     const botUsername = await getTelegramBotName(db);
     const [account] = await db
@@ -165,6 +167,7 @@ export function meRoutes({ db, config }: Deps) {
               ? and(eq(sessions.userId, user.id), ne(sessions.id, hashSessionToken(token)))
               : eq(sessions.userId, user.id),
           );
+        await notifyPasswordChanged(deps, user, "account");
         return c.body(null, 204);
       })
       // Notifications about approvals and finished interventions (R-CHAT-7).

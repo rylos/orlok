@@ -12,7 +12,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "models:fetch": "node scripts/fetch-models.mjs",
-    "wiki:eval": "tsx src/cli/wiki-eval.ts"
+    "wiki:eval": "tsx src/cli/wiki-eval.ts",
+    "reset-password": "tsx --env-file-if-exists=../../.env src/cli/reset-password.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.125.0",

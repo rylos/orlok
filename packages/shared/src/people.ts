@@ -5,6 +5,7 @@ import type { OfficeRole } from "./offices";
 import type {
   invitationAcceptSchema,
   invitationCreateSchema,
+  passwordResetSchema,
   personUpdateSchema,
 } from "./schemas/people";
 
@@ -60,6 +61,25 @@ export type InvitationResult = {
   invitation: Invitation;
   inviteUrl: string;
   email: InvitationEmailStatus;
+};
+
+// A one-time link an administrator creates for a person to choose a new password (R-AUTH-7).
+export const PASSWORD_RESET_TTL_HOURS = 24;
+
+export type PasswordResetInput = z.input<typeof passwordResetSchema>;
+
+// Like an invitation, the link is returned so it can be shared when the email did not leave.
+export type PasswordResetResult = {
+  person: { id: string; email: string; displayName: string };
+  resetUrl: string;
+  expiresAt: string;
+  email: InvitationEmailStatus;
+};
+
+export type PasswordResetPreview = {
+  email: string;
+  displayName: string;
+  companyName: string | null;
 };
 
 export type InvitationPreview = {

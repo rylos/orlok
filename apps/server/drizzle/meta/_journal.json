@@ -281,6 +281,13 @@
       "when": 1792578566024,
       "tag": "0039_wiki_given",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1792610504632,
+      "tag": "0040_password_resets",
+      "breakpoints": true
     }
   ]
 }

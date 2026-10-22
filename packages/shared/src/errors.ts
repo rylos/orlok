@@ -21,6 +21,10 @@ export const ERROR_CODES = [
   // A model profile still granted to a person, or used for documents, cannot be deleted.
   "profile_in_use",
   "invitation_invalid",
+  // A password reset link that is unknown, used, replaced or expired (R-AUTH-7).
+  "password_reset_invalid",
+  // A disabled person cannot be sent a password reset link: enable them first.
+  "person_disabled",
   "last_admin",
   "self_change_not_allowed",
   "revision_conflict",

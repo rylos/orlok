@@ -147,6 +147,8 @@ export const en = {
     sessionEnded:
       "Your session has ended: it was signed out from another device, expired or was disabled. Sign in again.",
     submit: "Sign in",
+    forgotPassword:
+      "Forgot your password? An administrator can send you a link to choose a new one.",
   },
   setup: {
     title: "Set up Orlok",
@@ -525,6 +527,17 @@ export const en = {
     resend: "Resend",
     revoke: "Revoke",
     revokeConfirm: "Revoke the invitation for {{email}}?",
+    resetPassword: "Reset password",
+    resetConfirm:
+      "{{name}} will be signed out on every device and receive a link to choose a new password. Nobody, you included, will know it.",
+    resetConfirmSelf:
+      "Your other devices will be signed out and you will receive a link to choose a new password. This session stays open.",
+    resetSend: "Reset and send the link",
+    resetSent: "Password reset link sent to {{email}}",
+    resetNotSent: "Password reset link created for {{email}}, but the email was not sent",
+    resetLink: "Password reset link",
+    resetLinkHint:
+      "Anyone with this link can choose the password: share it only with the person. It works once, for 24 hours.",
   },
   email: {
     title: "Email",
@@ -566,6 +579,15 @@ export const en = {
     invalidDescription:
       "This invitation link is invalid, has already been used or has expired. Ask an administrator for a new one.",
     goToLogin: "Go to sign in",
+  },
+  resetPassword: {
+    title: "Choose a new password",
+    description: "{{name}}, an administrator reset your password. Choose a new one to sign in.",
+    newPassword: "New password",
+    submit: "Save and sign in",
+    invalidTitle: "Link not valid",
+    invalidDescription:
+      "This link is invalid, has already been used, was replaced by a newer one or has expired. Ask an administrator for a new one.",
   },
   profiles: {
     title: "Colleague profiles",
@@ -1510,6 +1532,8 @@ export const en = {
       profile_in_use:
         "The profile is granted to a person, used for documents or for searching the wiki",
       invitation_invalid: "This invitation is invalid, already used or expired",
+      password_reset_invalid: "This link is invalid, already used, replaced or expired",
+      person_disabled: "This person is disabled: enable them first",
       last_admin: "At least one active administrator is required",
       self_change_not_allowed: "You cannot demote or disable your own account",
       revision_conflict: "The page was changed by someone else in the meantime",

@@ -88,6 +88,8 @@ export function LoginPage() {
           {login.isPending ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
           {t("login.submit")}
         </Button>
+        {/* There is no self-service reset: an administrator sends a link (R-AUTH-7). */}
+        <p className="text-center text-xs text-muted-foreground">{t("login.forgotPassword")}</p>
       </form>
     </AuthLayout>
   );

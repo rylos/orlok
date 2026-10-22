@@ -3,11 +3,12 @@ import {
   isUserRole,
   type ModelProfile,
   type OfficeMembership,
+  type PasswordResetResult,
   type Person,
   USER_ROLES,
   type UserRole,
 } from "@orlok/shared";
-import { Loader2, Pencil, TriangleAlert } from "lucide-react";
+import { KeyRound, Loader2, Pencil, TriangleAlert } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ErrorAlert } from "@/components/ui/alert";
@@ -17,7 +18,8 @@ import { CheckboxField } from "@/components/ui/checkbox-field";
 import { FormField } from "@/components/ui/form-field";
 import { Select } from "@/components/ui/select";
 import { translateError } from "@/i18n/errors";
-import { useUpdatePerson } from "@/lib/admin-queries";
+import { useResetPassword, useUpdatePerson } from "@/lib/admin-queries";
+import { LinkResultCard } from "./LinkResultCard";
 import { MembershipsEditor } from "./MembershipsEditor";
 import { PersonCommandTypes } from "./PersonCommandTypes";
 import { ProfilesPicker } from "./ProfilesPicker";
@@ -126,6 +128,8 @@ function PersonForm({
 export function PersonRow({ person, offices, profiles, isSelf }: PersonRowProps) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
+  const [confirmingReset, setConfirmingReset] = useState(false);
+  const [resetResult, setResetResult] = useState<PasswordResetResult | null>(null);
   const officeName = (id: string) => offices.find((office) => office.id === id)?.name ?? "—";
   const granted = profiles.filter((profile) => person.profileIds.includes(profile.id));
 
@@ -187,10 +191,88 @@ export function PersonRow({ person, offices, profiles, isSelf }: PersonRowProps)
         ) : null}
         <PersonCommandTypes personId={person.id} />
       </div>
-      <Button size="sm" variant="ghost" onClick={() => setEditing(true)}>
-        <Pencil aria-hidden />
-        {t("common.edit")}
-      </Button>
+      <div className="flex flex-wrap gap-1">
+        {/* A disabled person cannot sign in anyway: enabling them comes first. */}
+        {person.disabled ? null : (
+          <Button size="sm" variant="ghost" onClick={() => setConfirmingReset(true)}>
+            <KeyRound aria-hidden />
+            {t("people.resetPassword")}
+          </Button>
+        )}
+        <Button size="sm" variant="ghost" onClick={() => setEditing(true)}>
+          <Pencil aria-hidden />
+          {t("common.edit")}
+        </Button>
+      </div>
+      {confirmingReset || resetResult ? (
+        <div className="w-full">
+          {resetResult ? (
+            <LinkResultCard
+              key={resetResult.resetUrl}
+              id={`person-${person.id}-reset-link`}
+              email={resetResult.email}
+              title={
+                resetResult.email.sent
+                  ? t("people.resetSent", { email: person.email })
+                  : t("people.resetNotSent", { email: person.email })
+              }
+              url={resetResult.resetUrl}
+              linkLabel={t("people.resetLink")}
+              linkHint={t("people.resetLinkHint")}
+              onClose={() => setResetResult(null)}
+            />
+          ) : (
+            <ResetPasswordConfirm
+              person={person}
+              isSelf={isSelf}
+              onCancel={() => setConfirmingReset(false)}
+              onDone={(result) => {
+                setConfirmingReset(false);
+                setResetResult(result);
+              }}
+            />
+          )}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+// Resetting ends the person's sessions at once, so it is confirmed first (R-AUTH-7).
+function ResetPasswordConfirm({
+  person,
+  isSelf,
+  onCancel,
+  onDone,
+}: {
+  person: Person;
+  isSelf: boolean;
+  onCancel: () => void;
+  onDone: (result: PasswordResetResult) => void;
+}) {
+  const { t } = useTranslation();
+  const reset = useResetPassword();
+  return (
+    <div className="space-y-3 rounded-lg border border-warning/60 bg-warning/15 p-3 text-sm">
+      <p>
+        {isSelf
+          ? t("people.resetConfirmSelf")
+          : t("people.resetConfirm", { name: person.displayName })}
+      </p>
+      {reset.isError ? <ErrorAlert>{translateError(t, reset.error)}</ErrorAlert> : null}
+      <div className="flex justify-end gap-2">
+        <Button size="sm" variant="ghost" onClick={onCancel}>
+          {t("common.cancel")}
+        </Button>
+        <Button
+          size="sm"
+          disabled={reset.isPending}
+          onClick={() => reset.mutate(person.id, { onSuccess: onDone })}
+        >
+          {reset.isPending ? <Loader2 className="animate-spin" aria-hidden /> : null}
+          {t("people.resetSend")}
+        </Button>
+      </div>
     </div>
   );
 }

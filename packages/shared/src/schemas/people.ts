@@ -50,3 +50,8 @@ export const invitationAcceptSchema = z.object({
   displayName: requiredText(120),
   password: passwordSchema,
 });
+
+// Choosing a new password from a reset link (R-AUTH-7); the token travels like an invitation's.
+export const passwordResetSchema = z.object({
+  password: passwordSchema,
+});

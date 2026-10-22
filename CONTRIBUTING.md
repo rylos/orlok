@@ -43,6 +43,7 @@ From Git Bash the runner also starts (`NODE_ENV=development HOST=127.0.0.1 pnpm 
 | `pnpm test` | Vitest across all packages (the server needs Postgres: run `pnpm db:up` first) |
 | `pnpm build` | build server (tsdown) and web (Vite) |
 | `pnpm --filter @orlok/server db:generate` | generate Drizzle migrations |
+| `pnpm --filter @orlok/server reset-password --email <address>` | set a new random password for someone and print it once (`orlok-reset-password` in the app image, R-AUTH-7) |
 
 ### Layout
 

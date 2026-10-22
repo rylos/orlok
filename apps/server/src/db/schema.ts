@@ -329,6 +329,23 @@ export const invitations = pgTable(
   (table) => [index("invitations_email_idx").on(table.email)],
 );
 
+// One-time links to choose a new password, created by an administrator (R-AUTH-7). Only the
+// token's SHA-256 is stored; a new link replaces the previous one and using it removes them all.
+export const passwordResets = pgTable(
+  "password_resets",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    tokenHash: text("token_hash").notNull().unique(),
+    createdById: uuid("created_by_id").references(() => users.id, { onDelete: "set null" }),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    createdAt: createdAt(),
+  },
+  (table) => [index("password_resets_user_id_idx").on(table.userId)],
+);
+
 // Offices the invited person joins when accepting.
 export const invitationOffices = pgTable(
   "invitation_offices",

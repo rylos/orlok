@@ -268,5 +268,13 @@ export const router = createBrowserRouter([
     HydrateFallback: FullPageLoader,
     lazy: async () => ({ Component: (await import("@/pages/AcceptInvitePage")).AcceptInvitePage }),
   },
+  // Public: a link from an administrator to choose a new password (R-AUTH-7).
+  {
+    path: "/reset-password/:token",
+    HydrateFallback: FullPageLoader,
+    lazy: async () => ({
+      Component: (await import("@/pages/ResetPasswordPage")).ResetPasswordPage,
+    }),
+  },
   { path: "*", element: <Navigate to="/" replace /> },
 ]);

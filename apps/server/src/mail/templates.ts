@@ -2,7 +2,7 @@ import type { Locale } from "@orlok/shared";
 
 // Transactional emails in every supported language (R-I18N-3).
 
-type Email = { subject: string; text: string; html: string };
+export type Email = { subject: string; text: string; html: string };
 
 function escapeHtml(value: string) {
   return value
@@ -62,6 +62,101 @@ export function invitationEmail(params: InvitationEmailParams): Email {
     subject: copy.subject,
     text: [...copy.lines, "", `${copy.action}: ${params.inviteUrl}`, "", copy.footer].join("\n"),
     html: render(copy.lines, copy.footer, { label: copy.action, url: params.inviteUrl }),
+  };
+}
+
+export type PasswordResetEmailParams = {
+  locale: Locale;
+  companyName: string | null;
+  adminName: string;
+  resetUrl: string;
+  hours: number;
+};
+
+// A link to choose a new password, created by an administrator (R-AUTH-7).
+export function passwordResetEmail(params: PasswordResetEmailParams): Email {
+  const workspace = params.companyName ?? "Orlok";
+  const copy =
+    params.locale === "it"
+      ? {
+          subject: `Nuova password per ${workspace} su Orlok`,
+          lines: [
+            `${params.adminName} ha reimpostato la tua password di Orlok per ${workspace} e ha chiuso le tue sessioni su tutti i dispositivi.`,
+            `Scegli una nuova password dal link qui sotto, valido ${params.hours} ore e utilizzabile una volta sola.`,
+          ],
+          action: "Scegli la nuova password",
+          footer:
+            "Se non ti aspettavi questa email, contatta un amministratore. La password attuale resta valida finché non ne scegli una nuova.",
+        }
+      : {
+          subject: `New password for ${workspace} on Orlok`,
+          lines: [
+            `${params.adminName} reset your Orlok password for ${workspace}: you were signed out on every device.`,
+            `Choose a new password from the link below. It works once, for ${params.hours} hours.`,
+          ],
+          action: "Choose a new password",
+          footer:
+            "If you were not expecting this email, contact an administrator. Your current password keeps working until you choose a new one.",
+        };
+
+  return {
+    subject: copy.subject,
+    text: [...copy.lines, "", `${copy.action}: ${params.resetUrl}`, "", copy.footer].join("\n"),
+    html: render(copy.lines, copy.footer, { label: copy.action, url: params.resetUrl }),
+  };
+}
+
+// How a password was changed: from a reset link, by the server command, or from Account.
+export type PasswordChange = "link" | "server" | "account";
+
+export type PasswordChangedEmailParams = {
+  locale: Locale;
+  companyName: string | null;
+  email: string;
+  how: PasswordChange;
+};
+
+// Security notice after any password change, so a change the person did not make does not go
+// unnoticed (R-AUTH-7). No link inside: it only informs.
+export function passwordChangedEmail(params: PasswordChangedEmailParams): Email {
+  const workspace = params.companyName ?? "Orlok";
+  const copy =
+    params.locale === "it"
+      ? {
+          subject: "La password del tuo account Orlok è stata modificata",
+          lines: [
+            `Ti confermiamo che la password del tuo account Orlok per ${workspace} (${params.email}) è stata modificata.`,
+            {
+              link: "La modifica è stata effettuata tramite il link di reimpostazione inviato da un amministratore. Le sessioni aperte in precedenza sono state chiuse.",
+              server:
+                "La password è stata reimpostata da un amministratore direttamente sul server e tutte le sessioni aperte sono state chiuse. Dopo il primo accesso con la password temporanea, ti invitiamo a sostituirla da Account → Password.",
+              account:
+                "La modifica è stata effettuata dalla pagina Account. Le sessioni aperte sugli altri dispositivi sono state chiuse.",
+            }[params.how],
+            `Se non hai richiesto tu questa modifica, contatta immediatamente un amministratore di ${workspace}.`,
+          ],
+          footer: "Questo è un avviso automatico per la sicurezza del tuo account.",
+        }
+      : {
+          subject: "Your Orlok password has been changed",
+          lines: [
+            `This is to confirm that the password of your Orlok account for ${workspace} (${params.email}) has been changed.`,
+            {
+              link: "The change was made with the password reset link sent by an administrator. Sessions opened before have been signed out.",
+              server:
+                "The password was reset by an administrator directly on the server and every session has been signed out. After signing in with the temporary password, please replace it from Account → Password.",
+              account:
+                "The change was made from the Account page. Sessions on other devices have been signed out.",
+            }[params.how],
+            `If you did not request this change, contact an administrator of ${workspace} immediately.`,
+          ],
+          footer: "This is an automated notice about the security of your account.",
+        };
+
+  return {
+    subject: copy.subject,
+    text: [...copy.lines, "", copy.footer].join("\n"),
+    html: render(copy.lines, copy.footer),
   };
 }
 
