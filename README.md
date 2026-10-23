@@ -27,7 +27,7 @@ Orlok gives every office of a company its own virtual colleagues. They answer in
 
 ## Features
 
-- **Virtual colleagues**: each person creates their own, with a model and mode granted by administrators. [Colleagues](https://orlok.xyz/docs/colleagues) · [Conversations](https://orlok.xyz/docs/conversations)
+- **Virtual colleagues**: each person creates their own, with a model and mode granted by administrators; an office can also have one colleague for everyone, set up by an administrator, that answers from the wiki. [Colleagues](https://orlok.xyz/docs/colleagues) · [Conversations](https://orlok.xyz/docs/conversations)
 - **Office wiki**: a shared knowledge base that colleagues read before answering and keep up to date, with revisions, search, a knowledge graph and a review queue. [Wiki](https://orlok.xyz/docs/wiki)
 - **Document and notes import**: PDF, Office files and scans (local OCR), and Markdown from Obsidian, Notion or Joplin. [Documents](https://orlok.xyz/docs/wiki-import-documents) · [Notes](https://orlok.xyz/docs/wiki-import-notes)
 - **Real operations**: SSH and PowerShell on Linux and Windows hosts, run from an isolated container with each person's own credentials. [Operations](https://orlok.xyz/docs/operations) · [Hosts](https://orlok.xyz/docs/hosts)
