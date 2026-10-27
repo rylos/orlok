@@ -14,11 +14,13 @@ app image (`.dockerignore`).
   `pnpm typecheck` checks it with the rest: when the schema changes, fix it there.
 - `screenshots/`: Playwright scripts. The site keeps only Tokyo Night and Tokyo Night Light and
   shows each screen in the theme it is in (decided on 2026-10-16; until then each subject
-  had a theme of its own). `shoot.mjs` takes the 9 site screens in both, as `<name>-dark.png` and
-  `<name>-light.png` (8 on a computer, the chat also on a phone;
+  had a theme of its own). `shoot.mjs` takes the 11 site screens in both, as `<name>-dark.png` and
+  `<name>-light.png` (10 on a computer, the chat also on a phone; `--only` takes some of them;
   the chats show a few tabs, one waiting; the person's credentials and approved command types,
   in Mocha with the conversations, show that a colleague never does more than its person and
-  that "always allow" can be taken back), `shoot-video.mjs` the screens of the approvals video
+  that "always allow" can be taken back; `office-colleague` and `office-colleague-admin` show the
+  Guide, IT's office colleague, answering from a wiki procedure and its section in *Admin →
+  Offices*), `shoot-video.mjs` the screens of the approvals video
   (`--only v1`, Mocha) and of the wiki video (`--only v2 --theme latte`), and with `--only ad` the
   11 of the Active Directory video (a new domain account, made disabled: the first password is
   set by a person, never in a conversation).
@@ -33,7 +35,9 @@ app image (`.dockerignore`).
   (four fresh setups), while `output/video` keeps the Mocha and Latte rounds of 2026-10-15.
 - `output/site`, `output/video` (v1 and v2) and `output/video-ad`: the screens, 2880x1800
   (1440x900 at 2x). Until 2026-10-14 every screen was taken twice, in Latte and in Mocha. Commit them after
-  each round, so the history keeps the earlier versions.
+  each round, so the history keeps the earlier versions. The office colleague screens
+  (2026-10-27) are the exception: they were taken into a scratch folder and handed to the site
+  only, since screenshots change nothing in the product (decided with the user).
 
 ## Run
 
@@ -42,6 +46,7 @@ From the repository root, after `pnpm install`:
     demo/setup.sh --build                # first time, or after app changes: builds orlok:demo
     cd demo/screenshots && npm install && npx playwright install chromium   # once
     node shoot.mjs --paths paths.json    # site screens → ../output/site
+    node shoot.mjs --paths paths.json --only office-colleague,office-colleague-admin --out <folder>
 
     demo/setup.sh                        # again before each video: the script uses up the demo state
     node shoot-video.mjs --paths paths-video.json --only v1 --theme mocha   # → ../output/video

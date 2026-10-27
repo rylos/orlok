@@ -261,6 +261,16 @@ const colleagueRows = await db
       title: "Help desk",
       profileId: profile("Large · Ask").id,
     },
+    // The office colleague (R-ADM-8): set up by Alex as an administrator, for everyone in IT.
+    {
+      userId: alex.id,
+      officeId: it.id,
+      name: "Guide",
+      title: "IT help desk for everyone",
+      instructions: "Answer in short steps. For anything about passwords, send people to Sam.",
+      profileId: profile("Local · No commands").id,
+      officeWide: true,
+    },
   ])
   .returning();
 const colleague = (name: string) => {
@@ -269,6 +279,7 @@ const colleague = (name: string) => {
   return row;
 };
 const ada = colleague("Ada");
+const guide = colleague("Guide");
 
 // --- Hosts and Alex's credentials ------------------------------------------------------------
 
@@ -405,7 +416,7 @@ const PAGES: {
     section: null,
     type: "overview",
     content:
-      "Acme runs a small set of servers in its own rack and a few cloud services.\n\n## Servers\n\n- [[web-01]]: public website\n- [[db-01]]: intranet database\n- [[app-01]]: business app and printing\n\n## How we work\n\n- Changes go through a colleague in *ask* mode, so someone approves what runs.\n- Procedures: [[disk-space-web-01]], [[print-spooler]], [[nginx-config-changes]].",
+      "Acme runs a small set of servers in its own rack and a few cloud services.\n\n## Servers\n\n- [[web-01]]: public website\n- [[db-01]]: intranet database\n- [[app-01]]: business app and printing\n\n## How we work\n\n- Changes go through a colleague in *ask* mode, so someone approves what runs.\n- Procedures: [[disk-space-web-01]], [[print-spooler]], [[nginx-config-changes]], [[connect-to-vpn]].",
   },
   {
     slug: "web-01",
@@ -438,6 +449,14 @@ const PAGES: {
     type: "procedure",
     content:
       "When [[web-01]] goes above 90%:\n\n1. `df -h` to see which filesystem is full.\n2. `du -sh /var/log/*` to find the largest logs.\n3. Shrink the journal: `journalctl --vacuum-size=500M`.\n4. Check again with `df -h`.\n\nNever delete files under /var/www by hand.",
+  },
+  {
+    slug: "connect-to-vpn",
+    title: "Connect to the VPN",
+    section: "Procedures",
+    type: "procedure",
+    content:
+      "From home or on the road, the intranet and the shared folders need the VPN.\n\n1. Install the WireGuard app from the company portal (laptops from IT already have it).\n2. Open https://vpn.acme.example, sign in with your Acme account and download your profile.\n3. In WireGuard, choose *Import tunnel from file* and pick the downloaded file.\n4. Turn the *Acme* tunnel on.\n5. Check: https://intranet.example.com opens, and the server network 192.0.2.0/24 ([[office-network]]) answers.\n\nA profile lasts 90 days; when it expires, download a new one from step 2. If the portal refuses your account, ask IT.",
   },
   {
     slug: "print-spooler",
@@ -1075,6 +1094,40 @@ await db.insert(messages).values({
   createdAt: minutesAgo(29),
 });
 
+// The office colleague answering from the wiki, in a conversation of its own.
+const [guideConversation] = await db
+  .insert(conversations)
+  .values({
+    colleagueId: guide.id,
+    userId: alex.id,
+    title: "VPN from home",
+    createdAt: minutesAgo(20),
+    updatedAt: minutesAgo(19),
+  })
+  .returning();
+if (!guideConversation) throw new Error("Conversation insert returned no row");
+await db.insert(messages).values({
+  conversationId: guideConversation.id,
+  role: "user",
+  content: "I'm working from home tomorrow. How do I get on the VPN?",
+  createdAt: minutesAgo(20),
+});
+await db.insert(messages).values({
+  conversationId: guideConversation.id,
+  role: "assistant",
+  content: "",
+  model: LOCAL,
+  inputTokens: 4_100,
+  outputTokens: 260,
+  parts: [
+    {
+      type: "text",
+      text: "Here is how, from [[connect-to-vpn]]:\n\n1. Install **WireGuard** from the company portal. If your laptop came from IT, it is already there.\n2. Go to https://vpn.acme.example, sign in with your Acme account and download your profile.\n3. In WireGuard, choose *Import tunnel from file* and pick that file.\n4. Turn the **Acme** tunnel on.\n5. To check it works, open https://intranet.example.com.\n\nThe profile lasts 90 days: when it expires, download a new one as in step 2. If the portal does not accept your account, ask IT.",
+    },
+  ],
+  createdAt: minutesAgo(19),
+});
+
 // --- A month of model usage, and the limits ------------------------------------------------
 
 const usage: (typeof modelUsage.$inferInsert)[] = [];
@@ -1162,6 +1215,9 @@ if (values.paths) {
         // The person's own access and what they allowed always (Account), for the trust story.
         credentials: "/account#account-credentials-title",
         "command-types": "/account#account-command-types-title",
+        // The office colleague (R-ADM-8): its conversation, and its section in Admin → Offices.
+        "office-colleague": `/colleagues/${guide.id}/${guideConversation.id}`,
+        "office-colleague-admin": `/admin/offices#office-${it.id}`,
       },
       null,
       2,

@@ -2,6 +2,7 @@
 //
 //   cd demo/screenshots && npm install && npx playwright install chromium
 //   node shoot.mjs --url http://127.0.0.1:3999 --paths paths.json --out ../output/site
+//   node shoot.mjs --only office-colleague,office-colleague-admin   # some screens only
 //
 // The app must show the data of `../seed/demo-seed.ts` (fictional company Acme),
 // which also writes paths.json: never point this at an installation with real data. Each screen is
@@ -21,6 +22,9 @@ const { values } = parseArgs({
     out: { type: "string", default: "../output/site" },
     email: { type: "string", default: "alex.morgan@acme.example" },
     password: { type: "string", default: "demo-password-acme" },
+    // Comma-separated screen names: the others are left as they are, since the seed dates its
+    // data from the moment it runs and every new round changes them a little.
+    only: { type: "string" },
   },
 });
 
@@ -42,7 +46,12 @@ try {
     ...Object.entries(screens).map(([name, route]) => ({ name, route, viewport: DESKTOP })),
     { name: "chat-phone", route: screens.chat, viewport: PHONE, phone: true },
   ];
-  const shots = THEMES.flatMap((look) => screensOnce.map((shot) => ({ ...shot, ...look })));
+  const only = values.only?.split(",").map((name) => name.trim());
+  const shots = THEMES.flatMap((look) =>
+    screensOnce
+      .filter((shot) => !only || only.includes(shot.name))
+      .map((shot) => ({ ...shot, ...look })),
+  );
   for (const shot of shots) {
     const { theme, mode } = shot;
     const context = await browser.newContext({
