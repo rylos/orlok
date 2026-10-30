@@ -59,6 +59,7 @@ import { ContextMeter } from "./ContextMeter";
 import { ConversationTabs, TAB_BUTTON, useOpenConversations } from "./ConversationTabs";
 import { type DisplayAttachment, MessageBubble } from "./MessageBubble";
 import { RenameConversation } from "./RenameConversation";
+import { StoredMessage } from "./StoredMessage";
 import { WikiCandidates } from "./WikiCandidates";
 
 type ChatViewProps = {
@@ -1106,29 +1107,13 @@ export function ChatView({ office, colleague, archived, conversationId }: ChatVi
           ) : null}
 
           {messages.map((message) => (
-            <MessageBubble
+            <StoredMessage
               key={message.id}
-              author={message.role}
-              content={message.content}
-              status={message.status}
-              errorText={message.errorCode ? t(`errors.codes.${message.errorCode}`) : null}
-              wikiBase={wikiBase}
-              wikiPages={message.wikiPages}
-              wikiEdits={message.wikiEdits}
+              message={message}
               officeId={office.id}
-              parts={message.parts}
-              attachments={message.attachments.map((item) => ({
-                key: item.id,
-                fileName: item.fileName,
-                kind: item.kind,
-                url: `/api/attachments/${item.id}`,
-              }))}
+              wikiBase={wikiBase}
               // The office colleague only reads the wiki: nothing of its answers is filed (R-ADM-8).
-              saveTarget={
-                conversationId && !colleague.officeWide
-                  ? { conversationId, messageId: message.id }
-                  : null
-              }
+              conversationId={colleague.officeWide ? null : (conversationId ?? null)}
             />
           ))}
 
